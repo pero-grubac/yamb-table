@@ -1,0 +1,2520 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>YAMB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Share+Tech+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg: #050a05;
+            --bg2: #0a0f0a;
+            --green: #39ff14;
+            --green-dim: #1a7a08;
+            --cyan: #00ffff;
+            --purple: #bf00ff;
+            --yellow: #ffe600;
+            --red: #ff2244;
+            --orange: #ff8800;
+            --white: #e8ffe8;
+            --grid-color: rgba(57, 255, 20, 0.06);
+            --scanline: rgba(0, 0, 0, 0.18);
+            --glow-g: 0 0 8px #39ff14, 0 0 20px rgba(57, 255, 20, 0.4);
+            --glow-c: 0 0 8px #00ffff, 0 0 20px rgba(0, 255, 255, 0.4);
+            --glow-p: 0 0 8px #bf00ff, 0 0 20px rgba(191, 0, 255, 0.4);
+            --glow-y: 0 0 8px #ffe600, 0 0 20px rgba(255, 230, 0, 0.4);
+            --glow-r: 0 0 8px #ff2244, 0 0 20px rgba(255, 34, 68, 0.4);
+            --glow-o: 0 0 8px #ff8800, 0 0 20px rgba(255, 136, 0, 0.4);
+            --font-px: 'Press Start 2P', monospace;
+            --font-mono: 'Share Tech Mono', monospace;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            background: var(--bg);
+            color: var(--green);
+            font-family: var(--font-mono);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(var(--grid-color) 1px, transparent 1px), linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(to bottom, transparent 0px, transparent 3px, var(--scanline) 3px, var(--scanline) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* SCREENS */
+        .screen {
+            display: none;
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 16px 12px 60px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* LOGO */
+        .logo {
+            font-family: var(--font-px);
+            font-size: clamp(1.8rem, 8vw, 3rem);
+            color: var(--green);
+            text-shadow: var(--glow-g);
+            text-align: center;
+            letter-spacing: 8px;
+            animation: flicker 4s infinite;
+            line-height: 1.4;
+        }
+
+        .logo .sub {
+            display: block;
+            font-size: clamp(0.32rem, 1.4vw, 0.48rem);
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+            letter-spacing: 3px;
+            margin-top: 6px;
+            animation: none;
+        }
+
+        @keyframes flicker {
+
+            0%,
+            95%,
+            100% {
+                opacity: 1
+            }
+
+            96% {
+                opacity: 0.4
+            }
+
+            97% {
+                opacity: 1
+            }
+
+            98% {
+                opacity: 0.6
+            }
+
+            99% {
+                opacity: 1
+            }
+        }
+
+        /* BOX */
+        .box {
+            border: 2px solid var(--green);
+            padding: 16px;
+            margin: 14px 0;
+            position: relative;
+            background: rgba(0, 10, 0, 0.7);
+        }
+
+        .box::before {
+            content: attr(data-label);
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: var(--bg);
+            color: var(--cyan);
+            font-family: var(--font-px);
+            font-size: 0.42rem;
+            padding: 0 6px;
+            text-shadow: var(--glow-c);
+            letter-spacing: 2px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: 2px solid var(--green);
+            color: var(--green);
+            font-family: var(--font-px);
+            font-size: clamp(0.45rem, 1.8vw, 0.6rem);
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+            position: relative;
+        }
+
+        .btn::before {
+            content: '▶';
+            margin-right: 8px;
+        }
+
+        .btn:hover,
+        .btn:active {
+            background: var(--green);
+            color: var(--bg);
+            text-shadow: none;
+            box-shadow: var(--glow-g);
+        }
+
+        .btn.btn-cyan {
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .btn.btn-cyan:hover {
+            background: var(--cyan);
+            color: var(--bg);
+            box-shadow: var(--glow-c);
+        }
+
+        .btn.btn-yellow {
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+
+        .btn.btn-yellow:hover {
+            background: var(--yellow);
+            color: var(--bg);
+            box-shadow: var(--glow-y);
+        }
+
+        .btn.btn-red {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        .btn.btn-red:hover {
+            background: var(--red);
+            color: var(--white);
+        }
+
+        .btn.btn-purple {
+            border-color: var(--purple);
+            color: var(--purple);
+        }
+
+        .btn.btn-purple:hover {
+            background: var(--purple);
+            color: var(--white);
+            box-shadow: var(--glow-p);
+        }
+
+        .btn.btn-orange {
+            border-color: var(--orange);
+            color: var(--orange);
+        }
+
+        .btn.btn-orange:hover {
+            background: var(--orange);
+            color: var(--bg);
+            box-shadow: var(--glow-o);
+        }
+
+        .btn.btn-sm {
+            padding: 7px 12px;
+            font-size: 0.4rem;
+        }
+
+        .btn+.btn {
+            margin-top: 8px;
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .btn-inline {
+            width: auto;
+            display: inline-block;
+        }
+
+        /* INPUTS */
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            background: rgba(0, 20, 0, 0.8);
+            border: 2px solid var(--green-dim);
+            color: var(--green);
+            font-family: var(--font-mono);
+            font-size: 1rem;
+            padding: 9px 12px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            border-radius: 0;
+        }
+
+        input:focus {
+            border-color: var(--green);
+            box-shadow: var(--glow-g);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        /* COLORS */
+        .c-green {
+            color: var(--green);
+            text-shadow: var(--glow-g);
+        }
+
+        .c-cyan {
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+        }
+
+        .c-purple {
+            color: var(--purple);
+            text-shadow: var(--glow-p);
+        }
+
+        .c-yellow {
+            color: var(--yellow);
+            text-shadow: var(--glow-y);
+        }
+
+        .c-red {
+            color: var(--red);
+            text-shadow: var(--glow-r);
+        }
+
+        .c-orange {
+            color: var(--orange);
+            text-shadow: var(--glow-o);
+        }
+
+        .c-dim {
+            color: var(--green-dim);
+        }
+
+        .c-white {
+            color: var(--white);
+        }
+
+        /* SETUP */
+        #screen-setup .logo {
+            margin: 24px 0 20px;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .player-chip {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--green-dim);
+            padding: 7px 10px;
+            background: rgba(57, 255, 20, 0.04);
+            animation: slideIn 0.2s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .player-chip .pnum {
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            color: var(--cyan);
+            flex-shrink: 0;
+        }
+
+        .player-chip .pname {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            color: var(--green);
+            flex: 1;
+        }
+
+        .player-chip .del-btn {
+            background: none;
+            border: 1px solid var(--red);
+            color: var(--red);
+            font-family: var(--font-px);
+            font-size: 0.38rem;
+            padding: 2px 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .player-chip .del-btn:hover {
+            background: var(--red);
+            color: var(--bg);
+        }
+
+        .add-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-row input {
+            flex: 1;
+        }
+
+        .add-row .btn {
+            width: auto;
+            padding: 9px 14px;
+            font-size: 0.45rem;
+            flex-shrink: 0;
+        }
+
+        .add-row .btn::before {
+            content: '+';
+        }
+
+        /* MODE SELECT */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border: 2px solid var(--green-dim);
+        }
+
+        .mode-opt {
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--green-dim);
+            font-family: var(--font-px);
+            font-size: 0.38rem;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            border-right: 1px solid var(--green-dim);
+        }
+
+        .mode-opt:last-child {
+            border-right: none;
+        }
+
+        .mode-opt.active {
+            background: rgba(57, 255, 20, 0.1);
+            color: var(--green);
+            text-shadow: var(--glow-g);
+        }
+
+        .mode-opt .mn {
+            font-size: 0.5rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .mode-opt .md {
+            font-size: 0.3rem;
+            opacity: 0.7;
+            font-family: var(--font-mono);
+            display: block;
+        }
+
+        /* PASS SCREEN */
+        #screen-pass {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 20px;
+        }
+
+        #screen-pass.active {
+            display: flex;
+        }
+
+        .pass-arrow {
+            font-size: 3.5rem;
+            animation: bounce 1s infinite;
+            filter: drop-shadow(0 0 12px var(--cyan));
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-10px)
+            }
+        }
+
+        .pass-player {
+            font-family: var(--font-px);
+            font-size: clamp(0.9rem, 4vw, 1.4rem);
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+            letter-spacing: 4px;
+            word-break: break-word;
+        }
+
+        .pass-label {
+            font-family: var(--font-px);
+            font-size: 0.42rem;
+            color: var(--green-dim);
+            letter-spacing: 3px;
+        }
+
+        /* GAME SCREEN */
+        #screen-game {
+            padding-top: 10px;
+        }
+
+        /* Player tabs */
+        .tabs-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -12px;
+            padding: 0 12px;
+            scrollbar-width: none;
+        }
+
+        .tabs-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--green-dim);
+            width: max-content;
+            min-width: 100%;
+        }
+
+        .tab {
+            padding: 7px 12px;
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--green-dim);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.15s;
+            white-space: nowrap;
+            letter-spacing: 1px;
+            position: relative;
+        }
+
+        .tab.active-tab {
+            color: var(--green);
+            text-shadow: var(--glow-g);
+            border-bottom-color: var(--green);
+        }
+
+        .tab.cur-tab {
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+            border-bottom-color: var(--cyan);
+        }
+
+        .tab.done-tab {
+            color: var(--green-dim);
+        }
+
+        .tab.done-tab::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 3px;
+            font-size: 0.45rem;
+        }
+
+        /* Turn header */
+        .turn-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0 6px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .turn-name {
+            font-family: var(--font-px);
+            font-size: clamp(0.5rem, 2.2vw, 0.7rem);
+            letter-spacing: 2px;
+        }
+
+        .view-badge {
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            color: var(--yellow);
+            border: 1px solid var(--yellow);
+            padding: 3px 7px;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.5
+            }
+        }
+
+        /* ═══════ YAMB SHEET ═══════ */
+        .yamb-sheet-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -12px;
+            padding: 0 12px 8px;
+        }
+
+        .yamb-table {
+            width: 100%;
+            min-width: 420px;
+            border-collapse: collapse;
+        }
+
+        /* Header row */
+        .yamb-table .th-row th {
+            font-family: var(--font-px);
+            font-size: 0.38rem;
+            padding: 6px 4px;
+            text-align: center;
+            border-bottom: 2px solid var(--green-dim);
+            white-space: nowrap;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0;
+            background: var(--bg2);
+            z-index: 2;
+        }
+
+        .yamb-table .th-row th.th-cat {
+            text-align: left;
+            color: var(--green-dim);
+            min-width: 90px;
+        }
+
+        .col-dolje {
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+        }
+
+        .col-gore {
+            color: var(--purple);
+            text-shadow: var(--glow-p);
+        }
+
+        .col-slobodno {
+            color: var(--green);
+            text-shadow: var(--glow-g);
+        }
+
+        .col-najava {
+            color: var(--orange);
+            text-shadow: var(--glow-o);
+        }
+
+        /* Category rows */
+        .yamb-table td {
+            padding: 4px 3px;
+            border-bottom: 1px solid rgba(57, 255, 20, 0.07);
+            vertical-align: middle;
+        }
+
+        .yamb-table .td-cat {
+            font-family: var(--font-mono);
+            font-size: clamp(0.7rem, 2vw, 0.82rem);
+            color: var(--white);
+            padding-left: 2px;
+            white-space: nowrap;
+        }
+
+        .yamb-table .td-cat .cat-hint {
+            font-family: var(--font-px);
+            font-size: 0.28rem;
+            color: var(--green-dim);
+            display: block;
+            margin-top: 1px;
+        }
+
+        /* Section separators */
+        .yamb-table .sect-row td {
+            background: rgba(0, 255, 255, 0.04);
+            padding: 3px 4px;
+        }
+
+        .yamb-table .sect-row .td-cat {
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            letter-spacing: 2px;
+        }
+
+        /* Score cell */
+        .score-cell {
+            text-align: center;
+            min-width: 58px;
+        }
+
+        .score-cell input {
+            width: 52px;
+            height: 34px;
+            text-align: center;
+            padding: 2px;
+            background: rgba(0, 15, 0, 0.9);
+            border: 1px solid var(--green-dim);
+            color: var(--green);
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            outline: none;
+            -webkit-appearance: none;
+            border-radius: 0;
+            transition: border-color 0.2s, box-shadow 0.15s;
+        }
+
+        .score-cell input:focus {
+            border-color: var(--green);
+            box-shadow: var(--glow-g);
+        }
+
+        .score-cell input.filled {
+            border-color: var(--green);
+            background: rgba(57, 255, 20, 0.08);
+            text-shadow: var(--glow-g);
+        }
+
+        .score-cell input.locked {
+            background: rgba(57, 255, 20, 0.05);
+            border-color: rgba(57, 255, 20, 0.2);
+            color: var(--green);
+            cursor: default;
+        }
+
+        .score-cell input.locked-zero {
+            background: rgba(255, 34, 68, 0.05);
+            border-color: rgba(255, 34, 68, 0.2);
+            color: var(--red);
+        }
+
+        .score-cell input.next-allowed {
+            border-color: var(--cyan);
+            box-shadow: 0 0 6px rgba(0, 255, 255, 0.3);
+        }
+
+        .score-cell input.najava-active {
+            border-color: var(--orange);
+            box-shadow: var(--glow-o);
+            animation: najava-pulse 1s infinite;
+        }
+
+        @keyframes najava-pulse {
+
+            0%,
+            100% {
+                box-shadow: var(--glow-o)
+            }
+
+            50% {
+                box-shadow: none
+            }
+        }
+
+        .score-cell input:disabled {
+            pointer-events: none;
+        }
+
+        .score-cell .cell-locked-val {
+            width: 52px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            border: 1px solid rgba(57, 255, 20, 0.2);
+            background: rgba(57, 255, 20, 0.04);
+        }
+
+        .score-cell .cell-locked-val.zero {
+            color: rgba(255, 34, 68, 0.5);
+            border-color: rgba(255, 34, 68, 0.2);
+            background: rgba(255, 34, 68, 0.03);
+        }
+
+        .score-cell .blocked {
+            width: 52px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(57, 255, 20, 0.06);
+            font-family: var(--font-px);
+            font-size: 0.5rem;
+            color: rgba(57, 255, 20, 0.15);
+        }
+
+        /* Total / subtotal rows */
+        .yamb-table .sub-row td {
+            background: rgba(0, 20, 0, 0.8);
+            border-top: 1px solid var(--green-dim);
+            border-bottom: 1px solid var(--green-dim);
+        }
+
+        .yamb-table .sub-row .td-cat {
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            color: var(--cyan);
+            letter-spacing: 1px;
+        }
+
+        .sub-val {
+            text-align: center;
+            font-family: var(--font-px);
+            font-size: 0.42rem;
+            padding: 6px 3px;
+        }
+
+        .yamb-table .grand-row td {
+            background: rgba(0, 30, 0, 0.9);
+            border-top: 2px solid var(--cyan);
+        }
+
+        .yamb-table .grand-row .td-cat {
+            font-family: var(--font-px);
+            font-size: 0.42rem;
+            color: var(--yellow);
+            text-shadow: var(--glow-y);
+            letter-spacing: 2px;
+        }
+
+        .yamb-grand-val {
+            text-align: center;
+            font-family: var(--font-px);
+            font-size: 0.55rem;
+            color: var(--yellow);
+            text-shadow: var(--glow-y);
+            padding: 7px 3px;
+        }
+
+        /* ACTION AREA */
+        .action-area {
+            margin-top: 14px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .action-grid .btn {
+            margin: 0;
+        }
+
+        .action-grid .btn::before {
+            content: '';
+        }
+
+        .turn-info-bar {
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            color: var(--green-dim);
+            text-align: center;
+            margin-top: 8px;
+            letter-spacing: 1px;
+            line-height: 2;
+        }
+
+        /* NAJAVA overlay */
+        .najava-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 5, 0, 0.94);
+            z-index: 8000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .najava-overlay.active {
+            display: flex;
+        }
+
+        .najava-box {
+            border: 2px solid var(--orange);
+            background: var(--bg2);
+            padding: 24px 20px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: var(--glow-o);
+        }
+
+        .najava-title {
+            font-family: var(--font-px);
+            font-size: 0.6rem;
+            color: var(--orange);
+            text-shadow: var(--glow-o);
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .najava-sub {
+            font-family: var(--font-px);
+            font-size: 0.33rem;
+            color: var(--green-dim);
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: 1px;
+        }
+
+        .najava-cats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .najava-cat-btn {
+            background: transparent;
+            border: 1px solid var(--orange);
+            color: var(--orange);
+            font-family: var(--font-px);
+            font-size: 0.35rem;
+            padding: 6px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 1px;
+        }
+
+        .najava-cat-btn:hover {
+            background: var(--orange);
+            color: var(--bg);
+        }
+
+        .najava-cat-btn.taken {
+            border-color: var(--green-dim);
+            color: var(--green-dim);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .najava-cancel {
+            margin-top: 12px;
+        }
+
+        /* DICE ROLLER */
+        .dice-panel {
+            border: 2px solid var(--purple);
+            background: rgba(10, 0, 20, 0.85);
+            margin: 12px 0;
+            position: relative;
+        }
+
+        .dice-panel::before {
+            content: '🎲 DICE ROLLER · OPTIONAL';
+            position: absolute;
+            top: -10px;
+            left: 12px;
+            background: var(--bg);
+            color: var(--purple);
+            font-family: var(--font-px);
+            font-size: 0.38rem;
+            padding: 0 6px;
+            text-shadow: var(--glow-p);
+            letter-spacing: 2px;
+        }
+
+        .dice-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dice-header-title {
+            font-family: var(--font-px);
+            font-size: 0.4rem;
+            color: var(--purple);
+            text-shadow: var(--glow-p);
+            letter-spacing: 2px;
+        }
+
+        .dice-header-toggle {
+            font-family: var(--font-px);
+            font-size: 0.36rem;
+            color: var(--green-dim);
+            letter-spacing: 1px;
+        }
+
+        .dice-body {
+            padding: 0 14px 14px;
+            display: none;
+        }
+
+        .dice-body.open {
+            display: block;
+        }
+
+        .roll-counter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .roll-pip {
+            width: 13px;
+            height: 13px;
+            border: 2px solid var(--purple);
+            border-radius: 50%;
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .roll-pip.used {
+            background: var(--purple);
+            box-shadow: var(--glow-p);
+        }
+
+        .roll-lbl {
+            font-family: var(--font-px);
+            font-size: 0.33rem;
+            color: var(--green-dim);
+            margin-left: 4px;
+            letter-spacing: 1px;
+        }
+
+        .roll-lbl.warn {
+            color: var(--red);
+        }
+
+        .dice-tray {
+            display: flex;
+            justify-content: center;
+            gap: clamp(6px, 2vw, 12px);
+            margin-bottom: 10px;
+        }
+
+        .die {
+            width: clamp(46px, 11vw, 62px);
+            height: clamp(46px, 11vw, 62px);
+            border: 3px solid var(--green-dim);
+            background: rgba(0, 12, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .die.held {
+            border-color: var(--cyan);
+            box-shadow: var(--glow-c);
+            background: rgba(0, 25, 25, 0.9);
+        }
+
+        .die.held::after {
+            content: 'HOLD';
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: var(--font-px);
+            font-size: 0.27rem;
+            color: var(--cyan);
+            white-space: nowrap;
+        }
+
+        .die-val {
+            font-family: var(--font-px);
+            font-size: clamp(0.9rem, 3vw, 1.3rem);
+            color: var(--green);
+            text-shadow: var(--glow-g);
+            line-height: 1;
+        }
+
+        .die.held .die-val {
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+        }
+
+        .die-ph {
+            font-family: var(--font-px);
+            font-size: 0.55rem;
+            color: var(--green-dim);
+        }
+
+        .held-note {
+            font-family: var(--font-px);
+            font-size: 0.31rem;
+            color: var(--cyan);
+            text-align: center;
+            margin-bottom: 10px;
+            min-height: 16px;
+            letter-spacing: 1px;
+        }
+
+        .dice-acts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .dice-acts .btn {
+            margin: 0;
+            padding: 9px 8px;
+            font-size: 0.38rem;
+        }
+
+        .dice-acts .btn::before {
+            content: '';
+        }
+
+        .sugg-section {
+            border-top: 1px dashed rgba(191, 0, 255, 0.3);
+            padding-top: 10px;
+        }
+
+        .sugg-title {
+            font-family: var(--font-px);
+            font-size: 0.33rem;
+            color: var(--green-dim);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .sugg-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .sugg-chip {
+            border: 1px solid var(--yellow);
+            color: var(--yellow);
+            font-family: var(--font-px);
+            font-size: 0.3rem;
+            padding: 4px 9px;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 1px;
+            background: transparent;
+        }
+
+        .sugg-chip:hover {
+            background: var(--yellow);
+            color: var(--bg);
+        }
+
+        .sugg-chip.taken {
+            border-color: var(--green-dim);
+            color: var(--green-dim);
+            opacity: 0.45;
+            pointer-events: none;
+        }
+
+        .no-sugg {
+            font-family: var(--font-px);
+            font-size: 0.31rem;
+            color: var(--green-dim);
+            letter-spacing: 1px;
+        }
+
+        /* WINNER */
+        #screen-winner {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 18px;
+        }
+
+        #screen-winner.active {
+            display: flex;
+        }
+
+        .winner-title {
+            font-family: var(--font-px);
+            font-size: clamp(0.7rem, 3.5vw, 1.2rem);
+            color: var(--yellow);
+            text-shadow: var(--glow-y);
+            animation: flicker 3s infinite;
+            letter-spacing: 4px;
+            margin-top: 28px;
+        }
+
+        .stars {
+            font-size: 1.6rem;
+            animation: spin-stars 2s linear infinite;
+            filter: drop-shadow(0 0 10px var(--yellow));
+        }
+
+        @keyframes spin-stars {
+            0% {
+                transform: rotate(0)
+            }
+
+            100% {
+                transform: rotate(360deg)
+            }
+        }
+
+        .podium {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .podium-slot {
+            flex: 1;
+            max-width: 130px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .podium-name {
+            font-family: var(--font-px);
+            font-size: 0.33rem;
+            word-break: break-word;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .podium-score {
+            font-family: var(--font-px);
+            font-size: 0.45rem;
+        }
+
+        .podium-block {
+            width: 100%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-px);
+            font-size: clamp(0.8rem, 2.5vw, 1.1rem);
+        }
+
+        .podium-slot.rank-1 .podium-block {
+            height: 110px;
+            color: var(--yellow);
+            box-shadow: var(--glow-y);
+            background: rgba(255, 230, 0, 0.07);
+        }
+
+        .podium-slot.rank-2 .podium-block {
+            height: 80px;
+            color: var(--cyan);
+            box-shadow: var(--glow-c);
+            background: rgba(0, 255, 255, 0.04);
+        }
+
+        .podium-slot.rank-3 .podium-block {
+            height: 58px;
+            color: var(--purple);
+            box-shadow: var(--glow-p);
+            background: rgba(191, 0, 255, 0.04);
+        }
+
+        .podium-slot.rank-1 .podium-name {
+            color: var(--yellow);
+            text-shadow: var(--glow-y);
+        }
+
+        .podium-slot.rank-2 .podium-name {
+            color: var(--cyan);
+            text-shadow: var(--glow-c);
+        }
+
+        .podium-slot.rank-3 .podium-name {
+            color: var(--purple);
+            text-shadow: var(--glow-p);
+        }
+
+        .podium-slot.rank-1 .podium-score {
+            color: var(--yellow);
+        }
+
+        .podium-slot.rank-2 .podium-score {
+            color: var(--cyan);
+        }
+
+        .podium-slot.rank-3 .podium-score {
+            color: var(--purple);
+        }
+
+        .full-results {
+            width: 100%;
+            border: 2px solid var(--green-dim);
+            background: rgba(0, 10, 0, 0.8);
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 12px;
+            border-bottom: 1px solid rgba(57, 255, 20, 0.1);
+        }
+
+        .result-row:last-child {
+            border: none;
+        }
+
+        .result-row .r-rank {
+            font-family: var(--font-px);
+            font-size: 0.38rem;
+            color: var(--green-dim);
+            width: 22px;
+        }
+
+        .result-row .r-name {
+            font-family: var(--font-mono);
+            font-size: 0.88rem;
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        .result-row .r-score {
+            font-family: var(--font-px);
+            font-size: 0.5rem;
+        }
+
+        /* OVERLAYS */
+        .overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 5, 0, 0.92);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .overlay-box {
+            border: 2px solid var(--red);
+            background: var(--bg2);
+            padding: 24px 20px;
+            max-width: 340px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .overlay-title {
+            font-family: var(--font-px);
+            font-size: 0.55rem;
+            color: var(--red);
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+
+        .overlay-msg {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--white);
+            margin-bottom: 18px;
+            line-height: 1.5;
+        }
+
+        .overlay-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .overlay-btns .btn {
+            margin: 0;
+        }
+
+        .overlay-btns .btn::before {
+            content: '';
+        }
+
+        /* TOAST */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(70px);
+            background: var(--bg2);
+            border: 2px solid var(--cyan);
+            color: var(--cyan);
+            font-family: var(--font-px);
+            font-size: 0.38rem;
+            padding: 9px 18px;
+            letter-spacing: 2px;
+            z-index: 10000;
+            transition: transform 0.3s cubic-bezier(.34, 1.56, .64, 1);
+            white-space: nowrap;
+            pointer-events: none;
+            box-shadow: var(--glow-c);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* UTILS */
+        .mt-8 {
+            margin-top: 8px
+        }
+
+        .mt-12 {
+            margin-top: 12px
+        }
+
+        .mt-16 {
+            margin-top: 16px
+        }
+
+        .mt-20 {
+            margin-top: 20px
+        }
+
+        .text-center {
+            text-align: center
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg)
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--green-dim)
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════ SETUP ══════════ -->
+    <div id="screen-setup" class="screen active">
+        <div class="logo">YAMB<span class="sub">▶ BALKANSKI DICE TRACKER ◀</span></div>
+
+        <div class="box" data-label="PLAYERS">
+            <div class="player-list" id="player-list"></div>
+            <div class="add-row">
+                <input type="text" id="name-inp" placeholder="Ime igrača..." maxlength="20" />
+                <button class="btn btn-cyan btn-sm" onclick="addPlayer()">DODAJ</button>
+            </div>
+            <div class="mt-8" style="font-family:var(--font-px);font-size:0.33rem;color:var(--green-dim);">MIN 2 · MAX
+                UNLIMITED</div>
+        </div>
+
+        <div class="box" data-label="MOD IGRE">
+            <div class="mode-grid">
+                <button class="mode-opt active" id="mode-yamb" onclick="setMode('yamb')">
+                    <span class="mn">YAMB</span>
+                    <span class="md">Balkanski · 4 kolone</span>
+                </button>
+                <button class="mode-opt" id="mode-yahtzee" onclick="setMode('yahtzee')">
+                    <span class="mn">YAHTZEE</span>
+                    <span class="md">Classic · slobodno</span>
+                </button>
+                <button class="mode-opt" id="mode-yatzy" onclick="setMode('yatzy')">
+                    <span class="mn">YATZY</span>
+                    <span class="md">Skandinavski</span>
+                </button>
+            </div>
+        </div>
+
+        <button class="btn btn-yellow mt-16" onclick="startGame()">POČNI IGRU</button>
+        <div id="resume-wrap" style="display:none">
+            <button class="btn btn-cyan mt-8" onclick="resumeGame()">NASTAVI SAČUVANU IGRU</button>
+            <button class="btn btn-red btn-sm mt-8" onclick="confirmClearSave()">OBRIŠI SAČUVANO</button>
+        </div>
+        <div class="mt-16 text-center"
+            style="font-family:var(--font-px);font-size:0.3rem;color:var(--green-dim);line-height:2.2;">YAMB v2.0 ·
+            AUTOSAVE · GITHUB PAGES</div>
+    </div>
+
+    <!-- ══════════ PASS ══════════ -->
+    <div id="screen-pass" class="screen">
+        <div class="logo" style="margin-top:28px">YAMB</div>
+        <div class="pass-label">PREDAJ UREĐAJ</div>
+        <div class="pass-arrow">📱</div>
+        <div class="pass-player" id="pass-name">IGRAČ</div>
+        <div class="pass-label" style="margin-top:6px">PRITISNI KAD SI SPREMAN</div>
+        <button class="btn btn-cyan mt-20" onclick="enterTurn()" style="max-width:260px">▶ SPREMAN SAM</button>
+    </div>
+
+    <!-- ══════════ GAME ══════════ -->
+    <div id="screen-game" class="screen">
+
+        <div class="tabs-wrapper mt-10">
+            <div class="tabs" id="tabs-bar"></div>
+        </div>
+
+        <div class="turn-header">
+            <div>
+                <div class="turn-name c-cyan" id="view-name">—</div>
+                <div id="turn-sub"
+                    style="font-family:var(--font-px);font-size:0.32rem;color:var(--green-dim);margin-top:3px;"></div>
+            </div>
+            <div id="view-badge" class="view-badge" style="display:none">👁 SAMO PREGLED</div>
+        </div>
+
+        <!-- DICE ROLLER -->
+        <div class="dice-panel" id="dice-panel" style="display:none">
+            <div class="dice-header" onclick="toggleDice()">
+                <span class="dice-header-title" id="dice-title">BACI KOCKICE · OPCIONO</span>
+                <span class="dice-header-toggle" id="dice-toggle">▼ OTVORI</span>
+            </div>
+            <div class="dice-body" id="dice-body">
+                <div class="roll-counter">
+                    <div class="roll-pip" id="pip0"></div>
+                    <div class="roll-pip" id="pip1"></div>
+                    <div class="roll-pip" id="pip2"></div>
+                    <span class="roll-lbl" id="roll-lbl">BACANJE 0 OD 3</span>
+                </div>
+                <div class="dice-tray">
+                    <div class="die" id="d0" onclick="holdDie(0)"><span class="die-ph">?</span></div>
+                    <div class="die" id="d1" onclick="holdDie(1)"><span class="die-ph">?</span></div>
+                    <div class="die" id="d2" onclick="holdDie(2)"><span class="die-ph">?</span></div>
+                    <div class="die" id="d3" onclick="holdDie(3)"><span class="die-ph">?</span></div>
+                    <div class="die" id="d4" onclick="holdDie(4)"><span class="die-ph">?</span></div>
+                </div>
+                <div class="held-note" id="held-note"></div>
+                <div class="dice-acts">
+                    <button class="btn btn-purple" id="roll-btn" onclick="rollDice()">🎲 BACI</button>
+                    <button class="btn btn-sm" onclick="resetDice()">↺ RESET</button>
+                </div>
+                <div class="sugg-section" id="sugg-section" style="display:none">
+                    <div class="sugg-title">▸ PRIJEDLOZI ZA OVO BACANJE:</div>
+                    <div class="sugg-chips" id="sugg-chips"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCORE SHEET -->
+        <div class="yamb-sheet-wrap">
+            <table class="yamb-table" id="yamb-table"></table>
+        </div>
+
+        <div class="action-area" id="action-area"></div>
+
+        <div class="mt-16" style="border-top:1px solid var(--green-dim);padding-top:12px;">
+            <button class="btn btn-red btn-sm" onclick="confirmQuit()">⬛ ODUSTANI I RESETUJ</button>
+        </div>
+    </div>
+
+    <!-- ══════════ WINNER ══════════ -->
+    <div id="screen-winner" class="screen">
+        <div class="winner-title">IGRA GOTOVA!</div>
+        <div class="stars">★</div>
+        <div style="font-family:var(--font-px);font-size:0.36rem;color:var(--green-dim);letter-spacing:3px;">POBJEDNIK
+        </div>
+        <div class="pass-player c-yellow" id="winner-name" style="font-size:clamp(0.9rem,3.5vw,1.3rem)"></div>
+        <div class="podium" id="podium"></div>
+        <div class="full-results" id="full-results"></div>
+        <button class="btn btn-yellow mt-8" onclick="goSetup()" style="max-width:280px">▶ NOVA IGRA</button>
+        <div style="height:30px"></div>
+    </div>
+
+    <!-- NAJAVA overlay -->
+    <div class="najava-overlay" id="najava-overlay">
+        <div class="najava-box">
+            <div class="najava-title">! NAJAVA !</div>
+            <div class="najava-sub">ODABERI KATEGORIJU PRIJE BACANJA</div>
+            <div class="najava-cats" id="najava-cats"></div>
+            <button class="btn btn-sm najava-cancel" onclick="closeNajava()">ODUSTANI</button>
+        </div>
+    </div>
+
+    <!-- CONFIRM overlay -->
+    <div class="overlay" id="confirm-overlay">
+        <div class="overlay-box">
+            <div class="overlay-title" id="confirm-title">POTVRDI</div>
+            <div class="overlay-msg" id="confirm-msg">Jesi li siguran?</div>
+            <div class="overlay-btns">
+                <button class="btn btn-red" onclick="confirmYes()">DA</button>
+                <button class="btn" onclick="closeConfirm()">NE</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        /* ══════════════════════════════════════
+           GAME DEFINITIONS
+        ══════════════════════════════════════ */
+
+        // YAMB rows
+        const YAMB_ROWS = [
+            { id: 'ones', name: '1', hint: 'Suma jedinica', section: 'upper' },
+            { id: 'twos', name: '2', hint: 'Suma dvojki', section: 'upper' },
+            { id: 'threes', name: '3', hint: 'Suma trojki', section: 'upper' },
+            { id: 'fours', name: '4', hint: 'Suma četvorki', section: 'upper' },
+            { id: 'fives', name: '5', hint: 'Suma petica', section: 'upper' },
+            { id: 'sixes', name: '6', hint: 'Suma šestica', section: 'upper' },
+            { id: 'max', name: 'MAX', hint: 'Suma svih (max)', section: 'middle' },
+            { id: 'min', name: 'MIN', hint: 'Suma svih (min)', section: 'middle' },
+            { id: 'str', name: 'STRAIGHT', hint: '1-6: 66 pts / 1-5 or 2-6: 45', section: 'lower' },
+            { id: 'full', name: 'FULL', hint: '3+2: suma × 10 / 30+', section: 'lower' },
+            { id: 'poker', name: 'POKER', hint: '4 iste: suma × 10 / 40+', section: 'lower' },
+            { id: 'yamb', name: 'YAMB', hint: '5 istih: 50 pts', section: 'lower' },
+            { id: 'chance', name: 'ŠANSA', hint: 'Suma svih kockica', section: 'lower' },
+        ];
+
+        // YAHTZEE rows
+        const YAHTZEE_ROWS = [
+            { id: 'ones', name: 'Ones', hint: 'Sum of 1s', section: 'upper' },
+            { id: 'twos', name: 'Twos', hint: 'Sum of 2s', section: 'upper' },
+            { id: 'threes', name: 'Threes', hint: 'Sum of 3s', section: 'upper' },
+            { id: 'fours', name: 'Fours', hint: 'Sum of 4s', section: 'upper' },
+            { id: 'fives', name: 'Fives', hint: 'Sum of 5s', section: 'upper' },
+            { id: 'sixes', name: 'Sixes', hint: 'Sum of 6s', section: 'upper' },
+            { id: '3kind', name: '3 of a Kind', hint: 'Sum all dice', section: 'lower' },
+            { id: '4kind', name: '4 of a Kind', hint: 'Sum all dice', section: 'lower' },
+            { id: 'fhouse', name: 'Full House', hint: '25 pts', section: 'lower' },
+            { id: 'sstr', name: 'Sm. Straight', hint: '30 pts', section: 'lower' },
+            { id: 'lstr', name: 'Lg. Straight', hint: '40 pts', section: 'lower' },
+            { id: 'yahtzee', name: 'YAHTZEE', hint: '50 pts', section: 'lower' },
+            { id: 'chance', name: 'Chance', hint: 'Sum all dice', section: 'lower' },
+        ];
+
+        const YATZY_ROWS = [
+            { id: 'ones', name: 'Ones', hint: 'Sum of 1s', section: 'upper' },
+            { id: 'twos', name: 'Twos', hint: 'Sum of 2s', section: 'upper' },
+            { id: 'threes', name: 'Threes', hint: 'Sum of 3s', section: 'upper' },
+            { id: 'fours', name: 'Fours', hint: 'Sum of 4s', section: 'upper' },
+            { id: 'fives', name: 'Fives', hint: 'Sum of 5s', section: 'upper' },
+            { id: 'sixes', name: 'Sixes', hint: 'Sum of 6s', section: 'upper' },
+            { id: '1pair', name: 'One Pair', hint: 'Sum of pair', section: 'lower' },
+            { id: '2pair', name: 'Two Pairs', hint: 'Sum of pairs', section: 'lower' },
+            { id: '3kind', name: '3 of a Kind', hint: 'Sum of three', section: 'lower' },
+            { id: '4kind', name: '4 of a Kind', hint: 'Sum of four', section: 'lower' },
+            { id: 'sstr', name: 'Sm. Straight', hint: '15 pts', section: 'lower' },
+            { id: 'lstr', name: 'Lg. Straight', hint: '20 pts', section: 'lower' },
+            { id: 'fhouse', name: 'Full House', hint: 'Sum all', section: 'lower' },
+            { id: 'chance', name: 'Chance', hint: 'Sum all dice', section: 'lower' },
+            { id: 'yatzy', name: 'YATZY', hint: '50 pts', section: 'lower' },
+        ];
+
+        // YAMB columns
+        const YAMB_COLS = [
+            { id: 'dolje', label: '↓ DOLJE', color: 'col-dolje', rule: 'down' },
+            { id: 'gore', label: '↑ GORE', color: 'col-gore', rule: 'up' },
+            { id: 'slobodno', label: '★ SLOBOD.', color: 'col-slobodno', rule: 'free' },
+            { id: 'najava', label: '! NAJAVA', color: 'col-najava', rule: 'announce' },
+        ];
+
+        /* ══════════════════════════════════════
+           STATE
+        ══════════════════════════════════════ */
+        let G = {
+            players: [],
+            mode: 'yamb',        // yamb | yahtzee | yatzy
+            cur: 0,              // current player index
+            view: 0,             // viewed player index
+            phase: 'setup',
+            najavaChoice: null,  // {playerIdx, colId, catId} pending najava
+        };
+
+        const SAVE_KEY = 'yamb_v4';
+
+        /* ══════════════════════════════════════
+           HELPERS
+        ══════════════════════════════════════ */
+        function rows() {
+            if (G.mode === 'yamb') return YAMB_ROWS;
+            if (G.mode === 'yatzy') return YATZY_ROWS;
+            return YAHTZEE_ROWS;
+        }
+
+        function isYamb() { return G.mode === 'yamb'; }
+
+        function emptySheet() {
+            if (isYamb()) {
+                const sheet = {};
+                YAMB_COLS.forEach(col => {
+                    sheet[col.id] = {};
+                    YAMB_ROWS.forEach(row => sheet[col.id][row.id] = null);
+                });
+                return sheet;
+            } else {
+                const sheet = {};
+                rows().forEach(r => sheet[r.id] = null);
+                return sheet;
+            }
+        }
+
+        function getScore(pi, colId, rowId) {
+            if (isYamb()) return G.players[pi].sheet[colId]?.[rowId] ?? null;
+            return G.players[pi].sheet[rowId] ?? null;
+        }
+        function setScore(pi, colId, rowId, val) {
+            if (isYamb()) {
+                if (!G.players[pi].sheet[colId]) G.players[pi].sheet[colId] = {};
+                G.players[pi].sheet[colId][rowId] = val;
+            } else {
+                G.players[pi].sheet[rowId] = val;
+            }
+        }
+
+        // Is a cell allowed to be filled right now (for Yamb column rules)?
+        function isCellAllowed(pi, colId, rowId) {
+            if (!isYamb()) return getScore(pi, null, rowId) === null;
+            const col = YAMB_COLS.find(c => c.id === colId);
+            if (!col) return false;
+            if (getScore(pi, colId, rowId) !== null) return false; // already filled
+
+            if (col.rule === 'free') return true;
+            if (col.rule === 'announce') {
+                // only allowed if it's the active najava choice for this player
+                const n = G.players[pi].najava;
+                return n && n.colId === colId && n.rowId === rowId;
+            }
+            if (col.rule === 'down') {
+                const idx = YAMB_ROWS.findIndex(r => r.id === rowId);
+                if (idx === 0) return true;
+                const prevRow = YAMB_ROWS[idx - 1];
+                return getScore(pi, colId, prevRow.id) !== null;
+            }
+            if (col.rule === 'up') {
+                const idx = YAMB_ROWS.findIndex(r => r.id === rowId);
+                if (idx === YAMB_ROWS.length - 1) return true;
+                const nextRow = YAMB_ROWS[idx + 1];
+                return getScore(pi, colId, nextRow.id) !== null;
+            }
+            return false;
+        }
+
+        // Next fillable cell for dolje/gore columns (for highlighting)
+        function nextAllowedCell(pi, colId) {
+            const col = YAMB_COLS.find(c => c.id === colId);
+            if (!col) return null;
+            if (col.rule === 'down') {
+                for (let i = 0; i < YAMB_ROWS.length; i++) {
+                    if (getScore(pi, colId, YAMB_ROWS[i].id) === null) return YAMB_ROWS[i].id;
+                }
+            }
+            if (col.rule === 'up') {
+                for (let i = YAMB_ROWS.length - 1; i >= 0; i--) {
+                    if (getScore(pi, colId, YAMB_ROWS[i].id) === null) return YAMB_ROWS[i].id;
+                }
+            }
+            return null;
+        }
+
+        function isPlayerDone(pi) {
+            if (isYamb()) {
+                return YAMB_COLS.every(col => YAMB_ROWS.every(row => getScore(pi, col.id, row.id) !== null));
+            }
+            return rows().every(r => getScore(pi, null, r.id) !== null);
+        }
+
+        function isGameOver() { return G.players.every((_, i) => isPlayerDone(i)); }
+
+        /* ══════════════════════════════════════
+           SCORING CALCULATIONS
+        ══════════════════════════════════════ */
+        function calcUpperTotal(pi, colId) {
+            const upperRows = isYamb()
+                ? YAMB_ROWS.filter(r => r.section === 'upper')
+                : rows().filter(r => r.section === 'upper');
+            return upperRows.reduce((s, r) => s + (getScore(pi, colId, r.id) || 0), 0);
+        }
+
+        function calcBonus(pi, colId) {
+            if (isYamb()) {
+                const max = getScore(pi, colId, 'max') || 0;
+                const min = getScore(pi, colId, 'min') || 0;
+                return (max - min) * 10;
+            }
+            // Yahtzee/Yatzy: 35 or 50 bonus if upper >= 63
+            const upper = calcUpperTotal(pi, null);
+            const threshold = 63;
+            const bonus = G.mode === 'yatzy' ? 50 : 35;
+            return upper >= threshold ? bonus : 0;
+        }
+
+        function calcLowerTotal(pi, colId) {
+            const lowerRows = isYamb()
+                ? YAMB_ROWS.filter(r => r.section === 'lower')
+                : rows().filter(r => r.section === 'lower');
+            return lowerRows.reduce((s, r) => s + (getScore(pi, colId, r.id) || 0), 0);
+        }
+
+        function calcMiddleTotal(pi, colId) {
+            if (!isYamb()) return 0;
+            const max = getScore(pi, colId, 'max') || 0;
+            const min = getScore(pi, colId, 'min') || 0;
+            return max + min;
+        }
+
+        function calcColTotal(pi, colId) {
+            if (isYamb()) {
+                return calcUpperTotal(pi, colId) + calcMiddleTotal(pi, colId) + calcLowerTotal(pi, colId) + calcBonus(pi, colId);
+            }
+            return calcUpperTotal(pi, null) + calcLowerTotal(pi, null) + calcBonus(pi, null);
+        }
+
+        function calcGrandTotal(pi) {
+            if (isYamb()) {
+                return YAMB_COLS.reduce((s, col) => s + calcColTotal(pi, col.id), 0);
+            }
+            return calcColTotal(pi, null);
+        }
+
+        /* ══════════════════════════════════════
+           SAVE / LOAD
+        ══════════════════════════════════════ */
+        function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); } catch (e) { } }
+        function load() {
+            try {
+                const d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+                if (!d || !d.players || d.players.length < 2) return false;
+                G = d; return true;
+            } catch (e) { return false; }
+        }
+        function clearSave() { localStorage.removeItem(SAVE_KEY); }
+
+        /* ══════════════════════════════════════
+           SETUP
+        ══════════════════════════════════════ */
+        let setupPlayers = [];
+        let setupMode = 'yamb';
+
+        function initSetup() {
+            setupPlayers = []; setupMode = 'yamb';
+            renderSetupPlayers();
+            document.getElementById('name-inp').value = '';
+            ['yamb', 'yahtzee', 'yatzy'].forEach(m => {
+                document.getElementById('mode-' + m).classList.toggle('active', m === setupMode);
+            });
+            document.getElementById('resume-wrap').style.display = localStorage.getItem(SAVE_KEY) ? 'block' : 'none';
+        }
+        function renderSetupPlayers() {
+            const el = document.getElementById('player-list');
+            if (!setupPlayers.length) {
+                el.innerHTML = '<div style="font-family:var(--font-px);font-size:0.35rem;color:var(--green-dim);padding:6px 0">NEMA IGRAČA — DODAJ NAJMANJE 2</div>';
+                return;
+            }
+            el.innerHTML = '';
+            setupPlayers.forEach((n, i) => {
+                const d = document.createElement('div'); d.className = 'player-chip';
+                d.innerHTML = `<span class="pnum">P${i + 1}</span><span class="pname">${esc(n)}</span><button class="del-btn" onclick="rmPlayer(${i})">✕</button>`;
+                el.appendChild(d);
+            });
+        }
+        function addPlayer() {
+            const inp = document.getElementById('name-inp');
+            const n = inp.value.trim();
+            if (!n) { toast('UNESI IME'); return; }
+            if (setupPlayers.length >= 12) { toast('MAX 12 IGRAČA'); return; }
+            if (setupPlayers.map(x => x.toLowerCase()).includes(n.toLowerCase())) { toast('IME VEĆ POSTOJI'); return; }
+            setupPlayers.push(n); inp.value = ''; inp.focus(); renderSetupPlayers();
+        }
+        function rmPlayer(i) { setupPlayers.splice(i, 1); renderSetupPlayers(); }
+        const MODE_TITLES = {
+            yamb: { title: 'YAMB', sub: '▶ BALKANSKI DICE TRACKER ◀' },
+            yahtzee: { title: 'YAHTZEE', sub: '▶ CLASSIC AMERICAN DICE ◀' },
+            yatzy: { title: 'YATZY', sub: '▶ SKANDINAVSKI DICE ◀' },
+        };
+
+        function setMode(m) {
+            setupMode = m;
+            ['yamb', 'yahtzee', 'yatzy'].forEach(x => document.getElementById('mode-' + x).classList.toggle('active', x === m));
+            const logo = document.querySelector('#screen-setup .logo');
+            if (!logo) return;
+            // flicker out → swap → flicker in
+            logo.style.transition = 'opacity 0.12s';
+            logo.style.opacity = '0';
+            setTimeout(() => {
+                const t = MODE_TITLES[m];
+                logo.childNodes[0].textContent = t.title;
+                logo.querySelector('.sub').textContent = t.sub;
+                logo.style.opacity = '1';
+            }, 120);
+        }
+        document.getElementById('name-inp').addEventListener('keydown', e => { if (e.key === 'Enter') addPlayer(); });
+
+        function startGame() {
+            if (setupPlayers.length < 2) { toast('DODAJ BAR 2 IGRAČA'); return; }
+            G = {
+                players: setupPlayers.map(name => ({ name, sheet: null, najava: null })),
+                mode: setupMode, cur: 0, view: 0, phase: 'pass',
+            };
+            G.players.forEach((_, i) => G.players[i].sheet = emptySheet());
+            clearSave(); save();
+            showPass(0);
+        }
+        function resumeGame() {
+            if (!load()) { toast('NEMA SAVE-A'); return; }
+            G.phase === 'winner' ? showWinner() : showPass(G.cur);
+        }
+        function confirmClearSave() {
+            confirm2('OBRIŠI SAVE?', 'Ovo će obrisati sačuvanu igru.', () => {
+                clearSave(); document.getElementById('resume-wrap').style.display = 'none'; toast('OBRISANO');
+            });
+        }
+
+        /* ══════════════════════════════════════
+           PASS SCREEN
+        ══════════════════════════════════════ */
+        function showPass(pi) {
+            G.phase = 'pass'; G.view = pi;
+            document.getElementById('pass-name').textContent = G.players[pi].name.toUpperCase();
+            showScreen('screen-pass');
+        }
+        function enterTurn() {
+            G.view = G.cur;
+            // Fully reset dice state and UI before showing game
+            D = { vals: [null, null, null, null, null], held: [false, false, false, false, false], rolls: 0, open: false };
+            showGame();
+        }
+
+        /* ══════════════════════════════════════
+           GAME SCREEN
+        ══════════════════════════════════════ */
+        function showGame() {
+            G.phase = 'game'; save();
+            showScreen('screen-game');
+            renderTabs(); renderSheet();
+        }
+
+        function renderTabs() {
+            const bar = document.getElementById('tabs-bar'); bar.innerHTML = '';
+            G.players.forEach((p, i) => {
+                const b = document.createElement('button'); b.className = 'tab';
+                b.textContent = p.name;
+                if (i === G.cur) b.classList.add('cur-tab');
+                if (i === G.view) b.classList.add('active-tab');
+                if (isPlayerDone(i)) b.classList.add('done-tab');
+                b.onclick = () => viewPlayer(i); bar.appendChild(b);
+            });
+        }
+        function viewPlayer(i) { G.view = i; renderTabs(); renderSheet(); }
+
+        function renderSheet() {
+            const vi = G.view, ci = G.cur, isMine = vi === ci;
+            document.getElementById('view-name').textContent = G.players[vi].name.toUpperCase();
+            document.getElementById('turn-sub').textContent = isMine
+                ? '▶ TVOJ RED  ·  ' + G.mode.toUpperCase()
+                : 'PREGLEDAŠ: ' + G.players[vi].name.toUpperCase();
+            document.getElementById('view-badge').style.display = isMine ? 'none' : 'block';
+            document.getElementById('dice-panel').style.display = isMine ? 'block' : 'none';
+
+            isYamb() ? renderYambTable(vi, isMine) : renderFreeTable(vi, isMine);
+            renderActions(isMine);
+        }
+
+        /* ──── YAMB TABLE ──── */
+        function renderYambTable(vi, isMine) {
+            const tbl = document.getElementById('yamb-table');
+            tbl.innerHTML = '';
+
+            // Header
+            let hrow = `<tr class="th-row"><th class="th-cat">KATEGORIJA</th>`;
+            YAMB_COLS.forEach(c => `${hrow += `<th class="${c.color}">${c.label}</th>`}`);
+            tbl.innerHTML = hrow + '</tr>';
+
+            const sections = [
+                { label: '▸ GORNJI DIO', rows: YAMB_ROWS.filter(r => r.section === 'upper') },
+                { label: '▸ MAX / MIN', rows: YAMB_ROWS.filter(r => r.section === 'middle') },
+                { label: '▸ DONJI DIO', rows: YAMB_ROWS.filter(r => r.section === 'lower') },
+            ];
+
+            sections.forEach(sect => {
+                // section header row
+                const sr = tbl.insertRow(); sr.className = 'sect-row';
+                const stc = sr.insertCell(); stc.className = 'td-cat c-cyan'; stc.colSpan = 5; stc.textContent = sect.label;
+
+                sect.rows.forEach(row => {
+                    const tr = tbl.insertRow();
+                    const tc = tr.insertCell(); tc.className = 'td-cat';
+                    tc.innerHTML = `${esc(row.name)}<span class="cat-hint">${esc(row.hint)}</span>`;
+
+                    YAMB_COLS.forEach(col => {
+                        const td = tr.insertCell(); td.className = 'score-cell';
+                        const val = getScore(vi, col.id, row.id);
+                        const allowed = isMine && isCellAllowed(vi, col.id, row.id);
+                        const nextCell = isMine && (col.rule === 'down' || col.rule === 'up') ? nextAllowedCell(vi, col.id) : null;
+                        const isNext = nextCell === row.id;
+
+                        if (val !== null) {
+                            // Already scored
+                            const d = document.createElement('div');
+                            d.className = 'cell-locked-val' + (val === 0 ? ' zero' : '');
+                            d.textContent = val === 0 ? '—' : val;
+                            td.appendChild(d);
+                        } else if (allowed || isNext) {
+                            const inp = document.createElement('input');
+                            inp.type = 'number'; inp.min = 0; inp.max = 999;
+                            inp.className = 'score-input' + (isNext && col.rule !== 'free' && col.rule !== 'announce' ? ' next-allowed' : '');
+                            if (col.rule === 'announce') {
+                                const n = G.players[vi].najava;
+                                if (n && n.colId === col.id && n.rowId === row.id) inp.classList.add('najava-active');
+                            }
+                            inp.placeholder = '—';
+                            inp.dataset.col = col.id; inp.dataset.row = row.id;
+                            inp.disabled = !isMine;
+                            inp.addEventListener('input', () => { let v = parseInt(inp.value); if (isNaN(v)) { inp.value = ''; return; } if (v < 0) v = 0; if (v > 999) v = 999; inp.value = v; inp.classList.add('filled'); });
+                            td.appendChild(inp);
+                        } else {
+                            // Not allowed yet
+                            const d = document.createElement('div');
+                            d.className = 'blocked'; d.textContent = '░';
+                            td.appendChild(d);
+                        }
+                    });
+                });
+
+                // Sub-totals after upper section
+                if (sect.rows[0].section === 'upper') {
+                    const br = tbl.insertRow(); br.className = 'sub-row';
+                    const bc = br.insertCell(); bc.className = 'td-cat'; bc.textContent = 'GORNJI ZBIR';
+                    YAMB_COLS.forEach(col => {
+                        const td = br.insertCell(); td.className = 'sub-val c-cyan';
+                        td.textContent = calcUpperTotal(vi, col.id);
+                    });
+                }
+                if (sect.rows[0].section === 'middle') {
+                    const br = tbl.insertRow(); br.className = 'sub-row';
+                    const bc = br.insertCell(); bc.className = 'td-cat'; bc.textContent = 'BONUS (MAX-MIN)×10';
+                    YAMB_COLS.forEach(col => {
+                        const td = br.insertCell(); td.className = 'sub-val c-yellow';
+                        const b = calcBonus(vi, col.id);
+                        td.textContent = b > 0 ? '+' + b : '—';
+                    });
+                }
+                if (sect.rows[0].section === 'lower') {
+                    const br = tbl.insertRow(); br.className = 'sub-row';
+                    const bc = br.insertCell(); bc.className = 'td-cat'; bc.textContent = 'DONJI ZBIR';
+                    YAMB_COLS.forEach(col => {
+                        const td = br.insertCell(); td.className = 'sub-val c-purple';
+                        td.textContent = calcLowerTotal(vi, col.id);
+                    });
+                }
+            });
+
+            // Column totals
+            const cr = tbl.insertRow(); cr.className = 'sub-row';
+            const cc = cr.insertCell(); cc.className = 'td-cat c-cyan'; cc.textContent = 'ZBIR KOLONE';
+            YAMB_COLS.forEach(col => {
+                const td = cr.insertCell(); td.className = 'sub-val c-yellow';
+                td.textContent = calcColTotal(vi, col.id);
+            });
+
+            // Grand total
+            const gr = tbl.insertRow(); gr.className = 'grand-row';
+            const gc = gr.insertCell(); gc.className = 'td-cat'; gc.textContent = 'UKUPNO';
+            const gt = gr.insertCell(); gt.className = 'yamb-grand-val'; gt.colSpan = 4;
+            gt.textContent = calcGrandTotal(vi) + ' PTS';
+        }
+
+        /* ──── FREE TABLE (Yahtzee/Yatzy) ──── */
+        function renderFreeTable(vi, isMine) {
+            const tbl = document.getElementById('yamb-table');
+            tbl.innerHTML = '';
+
+            // Header
+            tbl.innerHTML = `<tr class="th-row"><th class="th-cat">KATEGORIJA</th><th class="col-slobodno">BODOVI</th></tr>`;
+
+            const allRows = rows();
+            const upper = allRows.filter(r => r.section === 'upper');
+            const lower = allRows.filter(r => r.section === 'lower');
+
+            const appendSection = (srows, label, colClass) => {
+                const sr = tbl.insertRow(); sr.className = 'sect-row';
+                const stc = sr.insertCell(); stc.className = 'td-cat c-cyan'; stc.colSpan = 2; stc.textContent = label;
+                srows.forEach(row => {
+                    const tr = tbl.insertRow();
+                    const tc = tr.insertCell(); tc.className = 'td-cat';
+                    tc.innerHTML = `${esc(row.name)}<span class="cat-hint">${esc(row.hint)}</span>`;
+                    const td = tr.insertCell(); td.className = 'score-cell';
+                    const val = getScore(vi, null, row.id);
+                    if (val !== null) {
+                        const d = document.createElement('div'); d.className = 'cell-locked-val' + (val === 0 ? ' zero' : '');
+                        d.textContent = val === 0 ? '—' : val; td.appendChild(d);
+                    } else {
+                        const inp = document.createElement('input');
+                        inp.type = 'number'; inp.min = 0; inp.max = 999; inp.placeholder = '—';
+                        inp.className = 'score-input next-allowed';
+                        inp.dataset.col = 'free'; inp.dataset.row = row.id;
+                        inp.disabled = !isMine;
+                        inp.addEventListener('input', () => { let v = parseInt(inp.value); if (isNaN(v)) { inp.value = ''; return; } if (v < 0) v = 0; if (v > 999) v = 999; inp.value = v; inp.classList.add('filled'); });
+                        td.appendChild(inp);
+                    }
+                });
+            };
+
+            appendSection(upper, '▸ UPPER SECTION', 'col-dolje');
+            // Upper total + bonus
+            const ut = tbl.insertRow(); ut.className = 'sub-row';
+            ut.insertCell().className = 'td-cat'; ut.cells[0].textContent = 'UPPER TOTAL';
+            const utv = ut.insertCell(); utv.className = 'sub-val c-cyan'; utv.textContent = calcUpperTotal(vi, null);
+
+            const bt = tbl.insertRow(); bt.className = 'sub-row';
+            bt.insertCell().className = 'td-cat'; bt.cells[0].textContent = 'BONUS (≥63)';
+            const bv = bt.insertCell(); bv.className = 'sub-val c-yellow';
+            const bon = calcBonus(vi, null); bv.textContent = bon > 0 ? '+' + bon : '—';
+
+            appendSection(lower, '▸ LOWER SECTION', 'col-gore');
+            // Grand total
+            const gr = tbl.insertRow(); gr.className = 'grand-row';
+            gr.insertCell().className = 'td-cat'; gr.cells[0].textContent = 'UKUPNO';
+            const gv = gr.insertCell(); gv.className = 'yamb-grand-val';
+            gv.textContent = calcGrandTotal(vi) + ' PTS';
+        }
+
+        /* ──── ACTIONS ──── */
+        function renderActions(isMine) {
+            const area = document.getElementById('action-area');
+            area.innerHTML = '';
+            if (!isMine) return;
+            const ci = G.cur;
+
+            if (isYamb()) {
+                // Show najava status
+                const n = G.players[ci].najava;
+                const najavaTip = n
+                    ? `<div class="turn-info-bar">! NAJAVA AKTIVNA: <span class="c-orange">${esc(n.colId.toUpperCase())} → ${esc(YAMB_ROWS.find(r => r.id === n.rowId)?.name || n.rowId)}</span></div>`
+                    : '';
+
+                area.innerHTML = `
+      ${najavaTip}
+      <div class="action-grid">
+        <button class="btn btn-cyan" onclick="submitTurn()">ZAVRŠI RED</button>
+        <button class="btn btn-orange" onclick="openNajava()">! NAJAVA</button>
+      </div>
+      <div class="turn-info-bar">BLANKO POLJE = 0 BODOVA</div>
+    `;
+            } else {
+                area.innerHTML = `
+      <div class="action-grid">
+        <button class="btn btn-cyan" onclick="submitTurn()">ZAVRŠI RED</button>
+        <button class="btn btn-yellow" onclick="clearInputs()">OBRIŠI</button>
+      </div>
+      <div class="turn-info-bar">BLANKO POLJE = 0 BODOVA</div>
+    `;
+            }
+        }
+
+        /* ──── SUBMIT TURN ──── */
+        function submitTurn() {
+            const ci = G.cur;
+            const inputs = Array.from(document.querySelectorAll('#yamb-table .score-input:not([disabled])'));
+
+            if (inputs.length === 0) {
+                toast('NEMA POLJA ZA UNOS');
+                return;
+            }
+
+            if (isYamb()) {
+                // In Yamb, player fills exactly ONE cell per turn (per column rule).
+                // dolje/gore/najava: only one input visible → save it (0 if blank = sacrifice).
+                // slobodno: multiple inputs visible → player must fill exactly one.
+
+                const slobodnoInputs = inputs.filter(i => i.dataset.col === 'slobodno');
+                const otherInputs = inputs.filter(i => i.dataset.col !== 'slobodno');
+
+                // Save dolje / gore / najava cells (one each, sacrifice=0 if blank)
+                otherInputs.forEach(inp => {
+                    const v = inp.value.trim();
+                    setScore(ci, inp.dataset.col, inp.dataset.row, v === '' ? 0 : parseInt(v));
+                });
+
+                // For slobodno: only save cells that have a value entered
+                const filledSlobodno = slobodnoInputs.filter(i => i.value.trim() !== '');
+
+                if (slobodnoInputs.length > 0 && filledSlobodno.length === 0 && otherInputs.length === 0) {
+                    toast('UPIŠI BAREM JEDNO POLJE U SLOBODNOJ KOLONI');
+                    return;
+                }
+                if (filledSlobodno.length > 1) {
+                    toast('SLOBODNA KOLONA: SAMO JEDNO POLJE PO POTEZU!');
+                    return;
+                }
+
+                filledSlobodno.forEach(inp => {
+                    setScore(ci, 'slobodno', inp.dataset.row, parseInt(inp.value.trim()));
+                });
+
+            } else {
+                // Yahtzee / Yatzy: player fills ONE category per turn
+                const filled = inputs.filter(i => i.value.trim() !== '');
+
+                if (filled.length === 0) {
+                    toast('UPIŠI BAREM JEDNU KATEGORIJU');
+                    return;
+                }
+                if (filled.length > 1) {
+                    toast('SAMO JEDNA KATEGORIJA PO POTEZU!');
+                    return;
+                }
+
+                filled.forEach(inp => {
+                    setScore(ci, null, inp.dataset.row, parseInt(inp.value.trim()));
+                });
+            }
+
+            // Clear najava
+            G.players[ci].najava = null;
+            save();
+
+            if (isGameOver()) { showWinner(); return; }
+
+            let next = (ci + 1) % G.players.length;
+            let safety = 0;
+            while (isPlayerDone(next) && safety < G.players.length) { next = (next + 1) % G.players.length; safety++; }
+            G.cur = next; G.view = next; save();
+            showPass(next);
+        }
+
+        function clearInputs() {
+            document.querySelectorAll('#yamb-table .score-input:not([disabled])').forEach(inp => {
+                inp.value = ''; inp.classList.remove('filled');
+            });
+            toast('OBRISANO');
+        }
+
+        /* ──── NAJAVA ──── */
+        function openNajava() {
+            const ci = G.cur;
+            const cats = document.getElementById('najava-cats');
+            cats.innerHTML = '';
+            YAMB_ROWS.forEach(row => {
+                const val = getScore(ci, 'najava', row.id);
+                const btn = document.createElement('button');
+                btn.className = 'najava-cat-btn' + (val !== null ? ' taken' : '');
+                btn.textContent = row.name + (val !== null ? ' ✓' : '');
+                if (val === null) btn.onclick = () => selectNajava(row.id);
+                cats.appendChild(btn);
+            });
+            document.getElementById('najava-overlay').classList.add('active');
+        }
+        function selectNajava(rowId) {
+            G.players[G.cur].najava = { colId: 'najava', rowId };
+            closeNajava();
+            toast('NAJAVA: ' + YAMB_ROWS.find(r => r.id === rowId)?.name);
+            renderSheet();
+        }
+        function closeNajava() { document.getElementById('najava-overlay').classList.remove('active'); }
+
+        /* ══════════════════════════════════════
+           DICE ROLLER
+        ══════════════════════════════════════ */
+        let D = { vals: [null, null, null, null, null], held: [false, false, false, false, false], rolls: 0, open: false };
+        const MAXROLLS = 3;
+
+        function resetDice() {
+            D = { vals: [null, null, null, null, null], held: [false, false, false, false, false], rolls: 0, open: false };
+            // Reset visual state of dice elements immediately
+            for (let i = 0; i < 5; i++) {
+                const d = document.getElementById('d' + i);
+                if (d) { d.className = 'die'; d.innerHTML = '<span class="die-ph">?</span>'; }
+            }
+            for (let i = 0; i < 3; i++) {
+                const p = document.getElementById('pip' + i);
+                if (p) p.classList.remove('used');
+            }
+            const rb = document.getElementById('roll-btn');
+            if (rb) { rb.disabled = false; rb.textContent = '🎲 BACI SVE'; }
+            const lbl = document.getElementById('roll-lbl');
+            if (lbl) { lbl.textContent = 'BACANJE 0 OD 3'; lbl.className = 'roll-lbl'; }
+            const hn = document.getElementById('held-note');
+            if (hn) hn.textContent = 'BACI PRVO PA DRŽI KOCKICE';
+            const dt = document.getElementById('dice-title');
+            if (dt) dt.textContent = 'BACI KOCKICE  ·  OPCIONO';
+            const ss = document.getElementById('sugg-section');
+            if (ss) ss.style.display = 'none';
+            // Close the panel
+            const db = document.getElementById('dice-body');
+            if (db) db.classList.remove('open');
+            const dg = document.getElementById('dice-toggle');
+            if (dg) dg.textContent = '▼ OTVORI';
+        }
+        function toggleDice() {
+            D.open = !D.open;
+            document.getElementById('dice-body').classList.toggle('open', D.open);
+            document.getElementById('dice-toggle').textContent = D.open ? '▲ ZATVORI' : '▼ OTVORI';
+        }
+        function renderDice(show) {
+            const panel = document.getElementById('dice-panel');
+            if (!panel) return;
+            panel.style.display = show ? 'block' : 'none';
+            if (!show) return;
+
+            for (let i = 0; i < 3; i++) {
+                const p = document.getElementById('pip' + i);
+                if (p) p.classList.toggle('used', i < D.rolls);
+            }
+            const lbl = document.getElementById('roll-lbl');
+            if (lbl) { lbl.textContent = 'BACANJE ' + D.rolls + ' OD ' + MAXROLLS; lbl.className = 'roll-lbl' + (D.rolls >= MAXROLLS ? ' warn' : ''); }
+
+            for (let i = 0; i < 5; i++) {
+                const d = document.getElementById('d' + i);
+                if (!d) continue;
+                d.className = 'die' + (D.held[i] ? ' held' : '');
+                d.innerHTML = D.vals[i] === null ? '<span class="die-ph">?</span>' : '<span class="die-val">' + D.vals[i] + '</span>';
+            }
+
+            const hc = D.held.filter(Boolean).length;
+            const hn = document.getElementById('held-note');
+            if (hn) { hn.textContent = D.rolls === 0 ? 'BACI PRVO PA DRŽI KOCKICE' : hc > 0 ? hc + ' DRŽI · ' + (5 - hc) + ' REBACUJE' : 'TAPNI KOCKICU ZA DRŽANJE'; }
+
+            const rb = document.getElementById('roll-btn');
+            if (rb) { rb.disabled = D.rolls >= MAXROLLS; rb.textContent = D.rolls >= MAXROLLS ? '🎲 NEMA BACANJA' : D.rolls === 0 ? '🎲 BACI SVE' : '🎲 REBACI'; }
+
+            renderSugg();
+
+            const dt = document.getElementById('dice-title');
+            if (dt) {
+                if (D.rolls === 0) { dt.textContent = 'BACI KOCKICE  ·  OPCIONO'; }
+                else { const s = D.vals.filter(v => v !== null).reduce((a, b) => a + b, 0); dt.textContent = 'KOCKICE: ' + D.vals.filter(v => v !== null).join(' · ') + '  (\u03a3=' + s + ')'; }
+            }
+        }
+
+        function rollDice() {
+            if (D.rolls >= MAXROLLS) { toast('NEMA VIŠE BACANJA'); return; }
+            if (!D.open) { D.open = true; document.getElementById('dice-body').classList.add('open'); document.getElementById('dice-toggle').textContent = '▲ ZATVORI'; }
+            const rolling = [];
+            for (let i = 0; i < 5; i++) { if (!D.held[i]) { D.vals[i] = Math.floor(Math.random() * 6) + 1; rolling.push(i); } }
+            D.rolls++;
+            rolling.forEach(i => {
+                const d = document.getElementById('d' + i); if (!d) return;
+                let t = 0;
+                const iv = setInterval(() => {
+                    d.innerHTML = '<span class="die-val" style="color:var(--yellow);text-shadow:var(--glow-y)">' + (Math.floor(Math.random() * 6) + 1) + '</span>';
+                    if (++t >= 8) { clearInterval(iv); d.innerHTML = '<span class="die-val">' + D.vals[i] + '</span>'; d.className = 'die' + (D.held[i] ? ' held' : ''); renderDice(true); }
+                }, 55);
+                d.className = 'die';
+            });
+            setTimeout(() => renderDice(true), 500);
+        }
+
+        function holdDie(i) {
+            if (D.rolls === 0) { toast('PRVO BACI!'); return; }
+            if (D.rolls >= MAXROLLS) return;
+            D.held[i] = !D.held[i]; renderDice(true);
+        }
+
+        function renderSugg() {
+            const ss = document.getElementById('sugg-section');
+            const sc = document.getElementById('sugg-chips');
+            if (!ss || !sc) return;
+            if (D.rolls === 0 || D.vals.every(v => v === null)) { ss.style.display = 'none'; return; }
+            const vals = D.vals.filter(v => v !== null);
+            const matches = getSugg(vals);
+            ss.style.display = 'block'; sc.innerHTML = '';
+            if (!matches.length) { sc.innerHTML = '<span class="no-sugg">NEMA JAKIH KOMBINACIJA</span>'; return; }
+            matches.forEach(({ label, catId, colId, score, taken }) => {
+                const c = document.createElement('button');
+                c.className = 'sugg-chip' + (taken ? ' taken' : '');
+                c.textContent = taken ? label + ' ✓' : label + ' → ' + score;
+                if (!taken) c.onclick = () => fillSugg(catId, colId, score);
+                sc.appendChild(c);
+            });
+        }
+
+        function getSugg(vals) {
+            const ci = G.cur;
+            const freq = {};
+            vals.forEach(v => freq[v] = (freq[v] || 0) + 1);
+            const counts = Object.values(freq).sort((a, b) => b - a);
+            const sum = vals.reduce((a, b) => a + b, 0);
+            const unique = [...new Set(vals)].sort((a, b) => a - b);
+            const results = [];
+
+            const numMap = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
+
+            const tryPush = (label, catId, colId, score) => {
+                const taken = isYamb() ? getScore(ci, colId, catId) !== null : getScore(ci, null, catId) !== null;
+                results.push({ label, catId, colId, score, taken });
+            };
+
+            if (isYamb()) {
+                // Suggest for each column where cell is allowed
+                YAMB_COLS.forEach(col => {
+                    YAMB_ROWS.forEach(row => {
+                        if (!isCellAllowed(ci, col.id, row.id)) return;
+                        let s = calcSuggScore(row.id, vals, freq, counts, sum, unique);
+                        if (s === null) return;
+                        const taken = getScore(ci, col.id, row.id) !== null;
+                        results.push({ label: col.label.replace(/[↓↑★!] /, '') + ': ' + row.name, catId: row.id, colId: col.id, score: s, taken });
+                    });
+                });
+            } else {
+                rows().forEach(row => {
+                    if (getScore(ci, null, row.id) !== null) return;
+                    let s = calcSuggScore(row.id, vals, freq, counts, sum, unique);
+                    if (s === null) return;
+                    const taken = false;
+                    results.push({ label: row.name, catId: row.id, colId: 'free', score: s, taken });
+                });
+            }
+
+            return results.filter(r => r.score > 0).sort((a, b) => { if (a.taken !== b.taken) return a.taken ? 1 : -1; return b.score - a.score; }).slice(0, 8);
+        }
+
+        function calcSuggScore(rowId, vals, freq, counts, sum, unique) {
+            const numMap = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
+            if (numMap[rowId]) { const n = numMap[rowId]; const s = vals.filter(v => v === n).reduce((a, b) => a + b, 0); return s >= n * 2 ? s : null; }
+            if (rowId === 'max') return sum >= 22 ? sum : null;
+            if (rowId === 'min') return sum <= 16 ? sum : null;
+            if (rowId === '3kind' || rowId === 'poker') {
+                const need = rowId === 'poker' ? 4 : 3;
+                return counts[0] >= need ? sum : null;
+            }
+            if (rowId === '4kind') return counts[0] >= 4 ? sum : null;
+            if (rowId === 'fhouse' || rowId === 'full') {
+                const isFH = (counts[0] === 3 && counts[1] === 2) || counts[0] === 5;
+                if (!isFH) return null;
+                if (G.mode === 'yatzy') return sum;
+                if (isYamb()) return sum * 10; // rough
+                return 25;
+            }
+            if (rowId === 'sstr') {
+                if (!checkStr(unique, 4)) return null;
+                return G.mode === 'yatzy' ? 15 : isYamb() ? checkStr(unique, 5) ? 66 : 45 : 30;
+            }
+            if (rowId === 'str') {
+                if (checkStr(unique, 5) && unique[0] === 1 && unique[4] === 6) return 66;
+                if (checkStr(unique, 5)) return 45;
+                return null;
+            }
+            if (rowId === 'lstr') return checkStr(unique, 5) ? G.mode === 'yatzy' ? 20 : 40 : null;
+            if (rowId === 'yahtzee' || rowId === 'yatzy' || rowId === 'yamb') return counts[0] === 5 ? 50 : null;
+            if (rowId === 'chance') return sum >= 18 ? sum : null;
+            if (rowId === '1pair') { const pv = Object.entries(freq).filter(([, c]) => c >= 2).map(([v]) => +v).sort((a, b) => b - a)[0]; return pv ? pv * 2 : null; }
+            if (rowId === '2pair') { const ps = Object.entries(freq).filter(([, c]) => c >= 2).map(([v]) => +v); return ps.length >= 2 ? ps.sort((a, b) => b - a).slice(0, 2).reduce((a, b) => a + b * 2, 0) : null; }
+            return null;
+        }
+
+        function checkStr(unique, len) {
+            for (let i = 0; i <= unique.length - len; i++) { let r = 1; for (let j = i + 1; j < unique.length && unique[j] === unique[j - 1] + 1; j++)r++; if (r >= len) return true; }
+            return false;
+        }
+
+        function fillSugg(catId, colId, score) {
+            const sel = colId === 'free'
+                ? `#yamb-table input[data-row="${catId}"]:not([disabled])`
+                : `#yamb-table input[data-col="${colId}"][data-row="${catId}"]:not([disabled])`;
+            const inp = document.querySelector(sel);
+            if (!inp) { toast('NE MOŽE SE POPUNITI'); return; }
+            inp.value = score; inp.classList.add('filled');
+            toast('POPUNJENO: ' + score + ' BODOVA');
+            inp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        /* ══════════════════════════════════════
+           WINNER
+        ══════════════════════════════════════ */
+        function showWinner() {
+            G.phase = 'winner'; save();
+            showScreen('screen-winner');
+            const ranked = G.players.map((p, i) => ({ name: p.name, score: calcGrandTotal(i) })).sort((a, b) => b.score - a.score);
+            document.getElementById('winner-name').textContent = ranked[0].name.toUpperCase();
+
+            const pod = document.getElementById('podium'); pod.innerHTML = '';
+            const order = ranked.length === 1 ? [0] : ranked.length === 2 ? [1, 0] : [1, 0, 2];
+            const medals = ['🥇', '🥈', '🥉'];
+            order.forEach(ri => {
+                if (!ranked[ri]) return;
+                const s = document.createElement('div'); s.className = 'podium-slot rank-' + (ri + 1);
+                s.innerHTML = `<div class="podium-name">${esc(ranked[ri].name)}</div><div class="podium-score">${ranked[ri].score} PTS</div><div class="podium-block">${medals[ri] || ri + 1}</div>`;
+                pod.appendChild(s);
+            });
+
+            const fr = document.getElementById('full-results'); fr.innerHTML = '';
+            const colors = ['c-yellow', 'c-cyan', 'c-purple'];
+            ranked.forEach((p, i) => {
+                const r = document.createElement('div'); r.className = 'result-row';
+                r.innerHTML = `<span class="r-rank">#${i + 1}</span><span class="r-name ${colors[i] || 'c-green'}">${esc(p.name)}</span><span class="r-score ${colors[i] || 'c-green'}">${p.score}</span>`;
+                fr.appendChild(r);
+            });
+        }
+
+        function goSetup() { clearSave(); showScreen('screen-setup'); initSetup(); }
+
+        /* ══════════════════════════════════════
+           UTILS
+        ══════════════════════════════════════ */
+        function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); window.scrollTo(0, 0); }
+
+        let _tt;
+        function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(_tt); _tt = setTimeout(() => t.classList.remove('show'), 2200); }
+
+        let _cb = null;
+        function confirm2(title, msg, cb) { document.getElementById('confirm-title').textContent = title; document.getElementById('confirm-msg').textContent = msg; _cb = cb; document.getElementById('confirm-overlay').classList.add('active'); }
+        function confirmYes() { closeConfirm(); if (_cb) _cb(); _cb = null; }
+        function closeConfirm() { document.getElementById('confirm-overlay').classList.remove('active'); }
+        function confirmQuit() { confirm2('ODUSTATI?', 'Trenutni napredak će biti izgubljen.', () => { clearSave(); showScreen('screen-setup'); initSetup(); }); }
+        function confirmClearSave2() { confirm2('OBRIŠI SAVE?', 'Ovo će obrisati sačuvanu igru.', () => { clearSave(); document.getElementById('resume-wrap').style.display = 'none'; toast('OBRISANO'); }); }
+
+        function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        /* ══════════════════════════════════════
+           INIT
+        ══════════════════════════════════════ */
+        initSetup();
+    </script>
+</body>
+
+</html>
