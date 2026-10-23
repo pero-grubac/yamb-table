@@ -12,7 +12,7 @@ export default function PlayerTabs({ players, mode, curIdx, viewIdx, onSelect })
           return (
             <button key={i} onClick={() => onSelect(i)} style={{
               padding: '7px 12px',
-              fontFamily: 'var(--font-px)', fontSize: '0.36rem',
+              fontFamily: 'var(--font-px)', fontSize: '0.5rem',
               cursor: 'pointer', border: 'none', background: 'transparent',
               color: isView ? (isCur ? 'var(--cyan)' : 'var(--green)') : 'var(--gdim)',
               borderBottom: `2px solid ${isView ? (isCur ? 'var(--cyan)' : 'var(--green)') : 'transparent'}`,

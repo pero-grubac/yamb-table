@@ -1,5 +1,5 @@
-import { YAMB_ROWS, YAMB_COLS } from '../constants'
-import { getCell, getRows } from '../models/gameModel'
+import { YAMB_ROWS, YAMB_COLS, STRAIGHT_RULES, BONUS_RULES, DEFAULT_RULES, UNDO_LIMIT } from '../constants/index.js'
+import { getCell, getRows, normalizeRules } from '../models/gameModel.js'
 
 /* ═══════════════════════════════════════
    SCORE CALCULATIONS
@@ -16,11 +16,18 @@ export function calcMid(sheet, colId) {
   return max + min
 }
 
-export function calcBonus(sheet, mode, colId) {
+/**
+ * Yamb: (MAX − MIN) × 10, or × the number of ones in the column when
+ * rules.bonus is 'timesOnes' (ones not filled yet count as 0, so no bonus).
+ */
+export function calcBonus(sheet, mode, colId, rules = DEFAULT_RULES) {
   if (mode === 'yamb') {
     const max = getCell(sheet, mode, colId, 'max') || 0
     const min = getCell(sheet, mode, colId, 'min') || 0
-    return (max - min) * 10
+    const factor = normalizeRules(rules).bonus === 'timesOnes'
+      ? getCell(sheet, mode, colId, 'ones') || 0
+      : 10
+    return (max - min) * factor
   }
   const upper = calcUpper(sheet, mode, null)
   return upper >= 63 ? (mode === 'yatzy' ? 50 : 35) : 0
@@ -31,23 +38,54 @@ export function calcLower(sheet, mode, colId) {
   return rows.reduce((sum, r) => sum + (getCell(sheet, mode, colId, r.id) || 0), 0)
 }
 
-export function calcColTotal(sheet, mode, colId) {
+export function calcColTotal(sheet, mode, colId, rules = DEFAULT_RULES) {
   if (mode === 'yamb') {
     return (
       calcUpper(sheet, mode, colId) +
       calcMid(sheet, colId) +
       calcLower(sheet, mode, colId) +
-      calcBonus(sheet, mode, colId)
+      calcBonus(sheet, mode, colId, rules)
     )
   }
   return calcUpper(sheet, mode, null) + calcLower(sheet, mode, null) + calcBonus(sheet, mode, null)
 }
 
-export function calcGrand(sheet, mode) {
+export function calcGrand(sheet, mode, rules = DEFAULT_RULES) {
   if (mode === 'yamb') {
-    return YAMB_COLS.reduce((sum, col) => sum + calcColTotal(sheet, mode, col.id), 0)
+    return YAMB_COLS.reduce((sum, col) => sum + calcColTotal(sheet, mode, col.id, rules), 0)
   }
   return calcColTotal(sheet, mode, null)
+}
+
+/* ═══════════════════════════════════════
+   HOUSE RULES (YAMB)
+═══════════════════════════════════════ */
+
+/**
+ * Points for a Yamb straight (kenta). dice are the five values, roll is the
+ * roll number 1–3 it was made in (null if unknown, treated as a later roll).
+ * Returns null when the dice are not a straight.
+ */
+export function straightScore(dice, rules = DEFAULT_RULES, roll = null) {
+  const unique = [...new Set(dice.filter(v => v !== null))].sort((a, b) => a - b)
+  if (unique.length !== 5 || unique[4] - unique[0] !== 4) return null
+
+  switch (normalizeRules(rules).straight) {
+    case 'perRoll':    return [66, 56, 46][(roll || 3) - 1] ?? 46
+    case 'smallLarge': return unique[0] === 1 ? 35 : 45
+    default:           return roll === 1 ? 66 : 45
+  }
+}
+
+/** Row hint for the Yamb table, following the chosen straight rule. */
+export function yambRowHint(row, rules = DEFAULT_RULES) {
+  if (row.id !== 'str') return row.hint
+  return STRAIGHT_RULES.find(r => r.id === normalizeRules(rules).straight).hint
+}
+
+/** Short label of the chosen MAX/MIN bonus rule, e.g. '(M−m)×10'. */
+export function bonusLabel(rules = DEFAULT_RULES) {
+  return BONUS_RULES.find(r => r.id === normalizeRules(rules).bonus).short
 }
 
 /* ═══════════════════════════════════════
@@ -131,7 +169,7 @@ export function applyTurn(sheet, mode, pending, najava) {
 
   if (mode === 'yamb') {
     const slobEntries  = Object.entries(pending).filter(([k, v]) => k.startsWith('slobodno_') && v !== '')
-    const otherEntries = Object.entries(pending).filter(([k, v]) => !k.startsWith('slobodno_'))
+    const otherEntries = Object.entries(pending).filter(([k]) => !k.startsWith('slobodno_'))
 
     if (slobEntries.length > 1) {
       return { newSheet: null, error: 'SLOBODNA: SAMO JEDNO POLJE PO POTEZU!' }
@@ -174,6 +212,59 @@ export function applyTurn(sheet, mode, pending, najava) {
   return { newSheet: next, error: null }
 }
 
+/**
+ * Plays one turn on the whole game: applies the inputs, remembers the
+ * previous state for undo and moves on to the next player (or the winner).
+ * Returns { game, error }; the input game is never mutated.
+ */
+export function playTurn(game, playerIdx, pending, najava) {
+  const { newSheet, error } = applyTurn(game.players[playerIdx].sheet, game.mode, pending, najava)
+  if (error) return { game: null, error }
+
+  const snapshot = { curIdx: game.curIdx, sheets: game.players.map(p => p.sheet) }
+  const next = JSON.parse(JSON.stringify({ ...game, history: [] }))
+  next.history = [...(game.history || []), JSON.parse(JSON.stringify(snapshot))].slice(-UNDO_LIMIT)
+  next.players[playerIdx].sheet = newSheet
+
+  // Everyone done → winner
+  if (next.players.every(p => isPlayerDone(p.sheet, next.mode))) {
+    next.phase = 'winner'
+    return { game: next, error: null }
+  }
+
+  // Advance to next non-done player
+  let idx = (playerIdx + 1) % next.players.length
+  let safety = 0
+  while (isPlayerDone(next.players[idx].sheet, next.mode) && safety < next.players.length) {
+    idx = (idx + 1) % next.players.length
+    safety++
+  }
+
+  next.curIdx = idx
+  next.phase  = 'pass'
+  return { game: next, error: null }
+}
+
+/** True when there is a move to undo. */
+export function canUndo(game) {
+  return !!game?.history?.length
+}
+
+/**
+ * Takes back the last move: restores every sheet and gives the turn back to
+ * the player who made it. Returns the new game, or null if there is nothing to undo.
+ */
+export function undoMove(game) {
+  if (!canUndo(game)) return null
+  const last = game.history[game.history.length - 1]
+  const next = JSON.parse(JSON.stringify(game))
+  next.players.forEach((p, i) => { p.sheet = JSON.parse(JSON.stringify(last.sheets[i])) })
+  next.curIdx  = last.curIdx
+  next.phase   = 'pass'
+  next.history = next.history.slice(0, -1)
+  return next
+}
+
 /* ═══════════════════════════════════════
    DICE SUGGESTIONS
 ═══════════════════════════════════════ */
@@ -187,7 +278,7 @@ function checkStraight(unique, len) {
   return false
 }
 
-function scoreForRow(rowId, vals, freq, counts, sum, unique, mode) {
+function scoreForRow(rowId, vals, freq, counts, sum, unique, mode, rules, roll) {
   const numMap = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 }
 
   if (numMap[rowId]) {
@@ -214,11 +305,7 @@ function scoreForRow(rowId, vals, freq, counts, sum, unique, mode) {
       if (mode === 'yamb')  return checkStraight(unique, 5) ? 66 : 45
       return 30
     }
-    case 'str': {
-      if (checkStraight(unique, 5) && unique[0] === 1 && unique[4] === 6) return 66
-      if (checkStraight(unique, 5)) return 45
-      return null
-    }
+    case 'str':     return straightScore(vals, rules, roll)
     case 'lstr':    return checkStraight(unique, 5) ? (mode === 'yatzy' ? 20 : 40) : null
     case 'yahtzee':
     case 'yatzy':
@@ -238,7 +325,11 @@ function scoreForRow(rowId, vals, freq, counts, sum, unique, mode) {
   }
 }
 
-export function getSuggestions(diceVals, sheet, mode, najava) {
+/**
+ * Up to eight best open cells for the dice. options.rules are the Yamb house
+ * rules, options.roll the current roll number (it matters for the straight).
+ */
+export function getSuggestions(diceVals, sheet, mode, najava, { rules = DEFAULT_RULES, roll = null } = {}) {
   const vals = diceVals.filter(v => v !== null)
   if (vals.length === 0) return []
 
@@ -255,7 +346,7 @@ export function getSuggestions(diceVals, sheet, mode, najava) {
       YAMB_ROWS.forEach(row => {
         if (!isCellEditable(sheet, mode, col.id, row.id, najava)) return
         if (getCell(sheet, mode, col.id, row.id) !== null) return
-        const score = scoreForRow(row.id, vals, freq, counts, sum, unique, mode)
+        const score = scoreForRow(row.id, vals, freq, counts, sum, unique, mode, rules, roll)
         if (score === null || score === 0) return
         results.push({ label: `${col.full}: ${row.name}`, colId: col.id, rowId: row.id, score })
       })
@@ -263,7 +354,7 @@ export function getSuggestions(diceVals, sheet, mode, najava) {
   } else {
     getRows(mode).forEach(row => {
       if (getCell(sheet, mode, null, row.id) !== null) return
-      const score = scoreForRow(row.id, vals, freq, counts, sum, unique, mode)
+      const score = scoreForRow(row.id, vals, freq, counts, sum, unique, mode, rules, roll)
       if (score === null || score === 0) return
       results.push({ label: row.name, colId: 'free', rowId: row.id, score })
     })

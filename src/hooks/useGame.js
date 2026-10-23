@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { createGame } from '../models/gameModel'
-import { isPlayerDone, applyTurn } from '../services/gameService'
+import { playTurn, undoMove } from '../services/gameService'
 import { usePersist } from './usePersist'
 
 export function useGame() {
@@ -9,8 +9,8 @@ export function useGame() {
   const { save, load, clear, hasSave } = usePersist()
 
   /* ── Start a new game ── */
-  const startGame = useCallback((playerNames, mode) => {
-    const g = createGame(playerNames, mode)
+  const startGame = useCallback((playerNames, mode, rules) => {
+    const g = createGame(playerNames, mode, rules)
     setGame(g)
     save(g)
     setPhase('pass')
@@ -34,42 +34,22 @@ export function useGame() {
   const endTurn = useCallback((playerIdx, pending, najava) => {
     if (!game) return null
 
-    const { newSheet, error } = applyTurn(
-      game.players[playerIdx].sheet,
-      game.mode,
-      pending,
-      najava
-    )
-
+    const { game: updatedGame, error } = playTurn(game, playerIdx, pending, najava)
     if (error) return error
 
-    const updatedGame = JSON.parse(JSON.stringify(game))
-    updatedGame.players[playerIdx].sheet = newSheet
-
-    // Check if all players are done
-    const allDone = updatedGame.players.every(p => isPlayerDone(p.sheet, updatedGame.mode))
-    if (allDone) {
-      updatedGame.phase = 'winner'
-      setGame(updatedGame)
-      save(updatedGame)
-      setPhase('winner')
-      return null
-    }
-
-    // Advance to next non-done player
-    let next = (playerIdx + 1) % updatedGame.players.length
-    let safety = 0
-    while (isPlayerDone(updatedGame.players[next].sheet, updatedGame.mode) && safety < updatedGame.players.length) {
-      next = (next + 1) % updatedGame.players.length
-      safety++
-    }
-
-    updatedGame.curIdx = next
-    updatedGame.phase  = 'pass'
     setGame(updatedGame)
     save(updatedGame)
-    setPhase('pass')
+    setPhase(updatedGame.phase)
     return null
+  }, [game, save])
+
+  /* ── Take back the last move ── */
+  const undo = useCallback(() => {
+    const prev = undoMove(game)
+    if (!prev) return
+    setGame(prev)
+    save(prev)
+    setPhase(prev.phase)
   }, [game, save])
 
   /* ── Quit and reset ── */
@@ -87,6 +67,7 @@ export function useGame() {
     resumeGame,
     playerReady,
     endTurn,
+    undo,
     quitGame,
     clearSave: clear,
   }

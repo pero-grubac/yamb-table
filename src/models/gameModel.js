@@ -1,4 +1,4 @@
-import { YAMB_ROWS, YAMB_COLS, YAHTZEE_ROWS, YATZY_ROWS } from '../constants'
+import { YAMB_ROWS, YAMB_COLS, YAHTZEE_ROWS, YATZY_ROWS, STRAIGHT_RULES, BONUS_RULES, DEFAULT_RULES } from '../constants/index.js'
 
 /**
  * Returns the correct row definitions for the given mode.
@@ -36,14 +36,38 @@ export function createPlayer(name, mode) {
 }
 
 /**
- * Creates the initial game state.
+ * Returns a complete, valid rules object; unknown or missing values fall back to the defaults.
  */
-export function createGame(playerNames, mode) {
+export function normalizeRules(rules) {
+  const straight = STRAIGHT_RULES.some(r => r.id === rules?.straight) ? rules.straight : DEFAULT_RULES.straight
+  const bonus    = BONUS_RULES.some(r => r.id === rules?.bonus) ? rules.bonus : DEFAULT_RULES.bonus
+  return { straight, bonus }
+}
+
+/**
+ * Creates the initial game state.
+ * history holds snapshots of earlier moves for undo (newest last).
+ */
+export function createGame(playerNames, mode, rules) {
   return {
     players: playerNames.map(name => createPlayer(name, mode)),
     mode,
+    rules: normalizeRules(rules),
     curIdx: 0,
     phase: 'pass',
+    history: [],
+  }
+}
+
+/**
+ * Brings a saved game up to the current shape (saves from older versions
+ * have no rules and no history).
+ */
+export function normalizeGame(data) {
+  return {
+    ...data,
+    rules: normalizeRules(data.rules),
+    history: Array.isArray(data.history) ? data.history : [],
   }
 }
 

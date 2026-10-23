@@ -1,4 +1,4 @@
-export default function ScoreCell({ scored, editable, isNext, isNajavaActive, pendingValue, onChange }) {
+export default function ScoreCell({ scored, editable, isNext, isNajavaActive, pendingValue, onChange, label }) {
   const cellBase = {
     width: 52, height: 34,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -26,6 +26,7 @@ export default function ScoreCell({ scored, editable, isNext, isNajavaActive, pe
     return (
       <input
         type='number'
+        aria-label={label}
         min={0}
         max={999}
         placeholder='—'

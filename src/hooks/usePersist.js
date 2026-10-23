@@ -1,10 +1,13 @@
 import { SAVE_KEY } from '../constants'
+import { normalizeGame } from '../models/gameModel'
 
 export function usePersist() {
   function save(game) {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(game))
-    } catch (_) {}
+    } catch {
+      // Storage blocked or full: the game continues, it just won't be resumable.
+    }
   }
 
   function load() {
@@ -13,8 +16,8 @@ export function usePersist() {
       if (!raw) return null
       const data = JSON.parse(raw)
       if (!data?.players?.length) return null
-      return data
-    } catch (_) {
+      return normalizeGame(data)
+    } catch {
       return null
     }
   }

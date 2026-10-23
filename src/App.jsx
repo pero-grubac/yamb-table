@@ -3,9 +3,13 @@ import PassPage   from './pages/PassPage'
 import GamePage   from './pages/GamePage'
 import WinnerPage from './pages/WinnerPage'
 import { useGame } from './hooks/useGame'
+import { canUndo } from './services/gameService'
 
 export default function App() {
-  const { game, phase, hasSave, startGame, resumeGame, playerReady, endTurn, quitGame, clearSave } = useGame()
+  const { game, phase, hasSave, startGame, resumeGame, playerReady, endTurn, undo, quitGame, clearSave } = useGame()
+
+  // Name of the player whose move "undo" would take back (null = nothing to undo)
+  const undoName = canUndo(game) ? game.players[game.history[game.history.length - 1].curIdx]?.name : null
 
   return (
     <>
@@ -22,6 +26,8 @@ export default function App() {
         <PassPage
           playerName={game.players[game.curIdx].name}
           onReady={playerReady}
+          undoName={undoName}
+          onUndo={undo}
         />
       )}
 
@@ -32,6 +38,8 @@ export default function App() {
           game={game}
           onTurnEnd={endTurn}
           onQuit={quitGame}
+          undoName={undoName}
+          onUndo={undo}
         />
       )}
 
@@ -39,7 +47,10 @@ export default function App() {
         <WinnerPage
           players={game.players}
           mode={game.mode}
+          rules={game.rules}
           onNewGame={quitGame}
+          undoName={undoName}
+          onUndo={undo}
         />
       )}
     </>

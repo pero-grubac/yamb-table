@@ -22,16 +22,16 @@ export default function DiceRoller({ vals, held, rolls, onRoll, onToggleHold, on
   return (
     <div style={{ border: '2px solid var(--purple)', background: 'rgba(10,0,20,0.85)', margin: '12px 0', position: 'relative' }}>
       {/* Label */}
-      <div style={{ position: 'absolute', top: -10, left: 12, background: 'var(--bg)', color: 'var(--purple)', fontFamily: 'var(--font-px)', fontSize: '0.37rem', padding: '0 6px', textShadow: 'var(--gP)', letterSpacing: '2px' }}>
+      <div style={{ position: 'absolute', top: -10, left: 12, background: 'var(--bg)', color: 'var(--purple)', fontFamily: 'var(--font-px)', fontSize: '0.5rem', padding: '0 6px', textShadow: 'var(--gP)', letterSpacing: '2px' }}>
         🎲 DICE ROLLER · OPCIONO
       </div>
 
       {/* Header */}
-      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px 8px', cursor: 'pointer', userSelect: 'none' }}>
-        <span style={{ fontFamily: 'var(--font-px)', fontSize: '0.4rem', color: 'var(--purple)', textShadow: 'var(--gP)', letterSpacing: '2px' }}>
+      <div onClick={() => setOpen(o => !o)} role='button' aria-expanded={open} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px 8px', cursor: 'pointer', userSelect: 'none' }}>
+        <span style={{ fontFamily: 'var(--font-px)', fontSize: '0.52rem', color: 'var(--purple)', textShadow: 'var(--gP)', letterSpacing: '2px' }}>
           {titleText}
         </span>
-        <span style={{ fontFamily: 'var(--font-px)', fontSize: '0.36rem', color: 'var(--gdim)' }}>
+        <span style={{ fontFamily: 'var(--font-px)', fontSize: '0.5rem', color: 'var(--gdim)' }}>
           {open ? '▲ ZATVORI' : '▼ OTVORI'}
         </span>
       </div>
@@ -51,7 +51,7 @@ export default function DiceRoller({ vals, held, rolls, onRoll, onToggleHold, on
                 flexShrink: 0,
               }} />
             ))}
-            <span style={{ fontFamily: 'var(--font-px)', fontSize: '0.33rem', color: rolls >= MAX_ROLLS ? 'var(--red)' : 'var(--gdim)', marginLeft: 4 }}>
+            <span style={{ fontFamily: 'var(--font-px)', fontSize: '0.46rem', color: rolls >= MAX_ROLLS ? 'var(--red)' : 'var(--gdim)', marginLeft: 4 }}>
               BACANJE {rolls} OD {MAX_ROLLS}
             </span>
           </div>
@@ -62,7 +62,7 @@ export default function DiceRoller({ vals, held, rolls, onRoll, onToggleHold, on
               const isHeld = held[i]
               const canHold = rolls > 0 && rolls < MAX_ROLLS
               return (
-                <div key={i} onClick={() => canHold && onToggleHold(i)} style={{
+                <div key={i} onClick={() => canHold && onToggleHold(i)} role='button' aria-pressed={isHeld} aria-label={`Kockica ${i + 1}: ${v ?? '?'}`} style={{
                   width: 'clamp(46px, 11vw, 62px)', height: 'clamp(46px, 11vw, 62px)',
                   border: `3px solid ${isHeld ? 'var(--cyan)' : 'var(--gdim)'}`,
                   background: isHeld ? 'rgba(0,25,25,0.9)' : 'rgba(0,12,0,0.9)',
@@ -77,7 +77,7 @@ export default function DiceRoller({ vals, held, rolls, onRoll, onToggleHold, on
                     : <span style={{ fontFamily: 'var(--font-px)', fontSize: 'clamp(0.9rem, 3vw, 1.3rem)', color: isHeld ? 'var(--cyan)' : 'var(--green)', textShadow: isHeld ? 'var(--gC)' : 'var(--gG)', lineHeight: 1 }}>{v}</span>
                   }
                   {isHeld && (
-                    <span style={{ position: 'absolute', bottom: -16, left: '50%', transform: 'translateX(-50%)', fontFamily: 'var(--font-px)', fontSize: '0.27rem', color: 'var(--cyan)', whiteSpace: 'nowrap' }}>HOLD</span>
+                    <span style={{ position: 'absolute', bottom: -16, left: '50%', transform: 'translateX(-50%)', fontFamily: 'var(--font-px)', fontSize: '0.44rem', color: 'var(--cyan)', whiteSpace: 'nowrap' }}>HOLD</span>
                   )}
                 </div>
               )
@@ -85,7 +85,7 @@ export default function DiceRoller({ vals, held, rolls, onRoll, onToggleHold, on
           </div>
 
           {/* Held note */}
-          <div style={{ fontFamily: 'var(--font-px)', fontSize: '0.31rem', color: 'var(--cyan)', textAlign: 'center', marginBottom: 10, minHeight: 16, letterSpacing: 1 }}>
+          <div style={{ fontFamily: 'var(--font-px)', fontSize: '0.46rem', color: 'var(--cyan)', textAlign: 'center', marginBottom: 10, minHeight: 16, letterSpacing: 1 }}>
             {heldNote}
           </div>
 
@@ -100,14 +100,14 @@ export default function DiceRoller({ vals, held, rolls, onRoll, onToggleHold, on
           {/* Suggestions */}
           {suggestions.length > 0 && (
             <div style={{ borderTop: '1px dashed rgba(191,0,255,0.3)', paddingTop: 10 }}>
-              <div style={{ fontFamily: 'var(--font-px)', fontSize: '0.33rem', color: 'var(--gdim)', letterSpacing: 2, marginBottom: 8 }}>
+              <div style={{ fontFamily: 'var(--font-px)', fontSize: '0.46rem', color: 'var(--gdim)', letterSpacing: 2, marginBottom: 8 }}>
                 ▸ PRIJEDLOZI:
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                 {suggestions.map((s, i) => (
                   <button key={i} onClick={() => onFillSugg(s)} style={{
                     border: '1px solid var(--yellow)', color: 'var(--yellow)',
-                    fontFamily: 'var(--font-px)', fontSize: '0.3rem',
+                    fontFamily: 'var(--font-px)', fontSize: '0.44rem',
                     padding: '4px 9px', cursor: 'pointer', background: 'transparent', letterSpacing: 1,
                   }}>
                     {s.label} → {s.score}

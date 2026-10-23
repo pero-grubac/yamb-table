@@ -10,7 +10,7 @@ export default function Toast({ message }) {
       border: '2px solid var(--cyan)',
       color: 'var(--cyan)',
       fontFamily: 'var(--font-px)',
-      fontSize: '0.38rem',
+      fontSize: '0.5rem',
       padding: '9px 18px',
       letterSpacing: '2px',
       zIndex: 10000,

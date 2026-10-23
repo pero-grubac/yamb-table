@@ -63,5 +63,21 @@ export const MODE_INFO = {
   yatzy:   { title: 'YATZY',   sub: '▶ SKANDINAVSKI DICE ◀'      },
 }
 
+// Yamb house rules, chosen on the setup page and saved with the game.
+// The first entry of each list is the default and keeps the original scoring.
+export const STRAIGHT_RULES = [
+  { id: 'firstRoll',  label: '66 u prvom bacanju, inače 45',    hint: '66 / 45 pts'       },
+  { id: 'perRoll',    label: '66 / 56 / 46 po bacanju',         hint: '66 / 56 / 46 pts'  },
+  { id: 'smallLarge', label: 'Mala 35 / velika 45 (1-5 / 2-6)', hint: '1-5: 35 · 2-6: 45' },
+]
+
+export const BONUS_RULES = [
+  { id: 'times10',   label: '(MAX − MIN) × 10',                     short: '(M−m)×10'   },
+  { id: 'timesOnes', label: '(MAX − MIN) × broj jedinica u koloni', short: '(M−m)×JED.' },
+]
+
+export const DEFAULT_RULES = { straight: 'firstRoll', bonus: 'times10' }
+
 export const MAX_ROLLS = 3
 export const MAX_PLAYERS = 12
+export const UNDO_LIMIT = 10
