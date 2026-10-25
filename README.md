@@ -15,7 +15,7 @@
 
 [![Live Demo](https://img.shields.io/badge/🎲_Live_Demo-yamb--table-39FF14?style=for-the-badge)](https://pero-grubac.github.io/yamb-table/)
 
-<img src="readme_assets/demo.gif" alt="YAMB demo: adding two players, choosing house rules in the PRAVILA panel, rolling and holding dice into a straight, taking the suggested 56 points, ending the turn and undoing it" width="780">
+<img src="readme_assets/demo.gif" alt="YAMB demo: adding two players, rolling the dice, holding four and rerolling into a straight, taking the suggested 45 points, ending the turn, then undoing it from the hand-over screen" width="780">
 
 </div>
 
